@@ -18,7 +18,7 @@ before_install:
 - cd ~
 - git clone https://github.com/rockf91/rockf91.github.io.git build_dir
 - cd build_dir
-- git checkout -b master
+# - git checkout -b master
 
 script:
   - bundle install
