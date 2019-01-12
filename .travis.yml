@@ -25,10 +25,11 @@ script:
   - bundle install
   - bundle exec jekyll build
   - ls
-  - rm -rf * && cp -r ../_site/* .
+  - rm -rf * && cp -r ./_site/* .
+  - ls
   - git add --all .
   - git commit -m "Travis CI Auto Builder"
-  - git push -u --force https://$DEPLOY_TOKEN@github.com/rockf91/rockf91.github.io.git origin master:gh-pages
+  - git push -u --force https://$DEPLOY_TOKEN@github.com/rockf91/rockf91.github.io.git master gh-pages
 
 # after_success:
 #   - cd build_dir
