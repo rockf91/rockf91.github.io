@@ -25,7 +25,7 @@ script:
   - bundle install
   - bundle exec jekyll build
   - ls
-  - rm -rf * && cp -r ./_site/* .
+  - rm -rf * && cp -r /_site/* .
   - ls
   - git add --all .
   - git commit -m "Travis CI Auto Builder"
