@@ -31,7 +31,8 @@ script:
   - ls
   - git add --all .
   - git commit -m "Travis CI Auto Builder"
-  - git push -u --force https://$DEPLOY_TOKEN@github.com/rockf91/rockf91.github.io.git master gh-pages
+  - git branch -vv
+  - git push --force https://$DEPLOY_TOKEN@github.com/rockf91/rockf91.github.io.git master:gh-pages
 
 # after_success:
 #   - cd build_dir
