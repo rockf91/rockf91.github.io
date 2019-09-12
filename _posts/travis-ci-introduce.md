@@ -4,13 +4,15 @@ date: 2018-01-25 22:21:38
 tags: travis-ci
 ---
 
- [Travis CI](https://travis-ci.org) 是一个基于云的持续集成项目，提供免费的云主机替你完成自动编译测试等功能。可以利用它做很多事情，一键发布什么的，岂不美哉？
+ <!-- more -->
+
+
+
+[Travis CI](https://travis-ci.org) 是一个基于云的持续集成项目，提供免费的云主机替你完成自动编译测试等功能。可以利用它做很多事情，一键发布什么的，岂不美哉？
 
  [Doxygen](http://doxygen.org) 是一个生成参考文档的工具，它直接抽取代码中一定格式的注释生成html站点或者pdf文档。因为文档是通过注释生成的，所以不用刻意维护，很方便。
 
 本文介绍如何利用[Travis CI](https://travis-ci.org) 每次push代码后，自动在 `gh-pages` 分支生成新的 [Doxygen](http://doxygen.org) 文档网站。
-
-<!-- more -->
 
 ## 首先注册Travis CI然后同步你的工程
 直接用你的github账号登陆，然后Sync account就能看到你的项目列表了

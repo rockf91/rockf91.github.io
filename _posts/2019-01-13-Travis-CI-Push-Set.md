@@ -4,9 +4,9 @@ title: "Travis CI Push 权限配置"
 date: 2019-01-13 22:46:38
 categories: Travis
 ---
-要 Travis 向 Github 仓库 Push 的权限，需要由 SSH 协议机制来保证安全性。现在 Github 开放免费私有库使用，Travis Push 私有库通过 SSH 的方式比较方便安全。下面简单讲解一下如何配置。
-
 <!-- more -->
+
+要 Travis 向 Github 仓库 Push 的权限，需要由 SSH 协议机制来保证安全性。现在 Github 开放免费私有库使用，Travis Push 私有库通过 SSH 的方式比较方便安全。下面简单讲解一下如何配置。
 
 ## 基本原理
 
