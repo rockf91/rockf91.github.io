@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" prefix="og: http://ogp.me/ns#" class="han-init">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>adb调试 &mdash; 游戏</title>
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/primer-css/css/primer.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/primer-markdown/dist/user-content.min.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/octicons/octicons/octicons.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/collection.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/repo-card.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/sections/repo-list.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/sections/mini-repo-list.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/boxed-group.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/common.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/share.js/dist/css/share.min.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/responsive.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/posts/index.css">
+    <!-- Latest compiled and minified CSS -->
+    
+
+    
+    <link rel="canonical" href="https://rockf91.github.io/2019/09/24/adb/">
+    <link rel="alternate" type="application/atom+xml" title="游戏" href="https://rockf91.github.io/feed.xml">
+    <link rel="shortcut icon" href="https://rockf91.github.io/favicon.ico">
+    
+    <meta property="og:title" content="adb调试">
+      
+    <meta name="keywords" content="游戏, rockf91">
+    <meta name="og:keywords" content="游戏, rockf91">
+      
+    <meta name="description" content="找到sdk中的adb路径，添加到环境变量android-sdk\platform-toolsadb kill-serveradb start-server由于adb并不稳定, 有时候莫名的问题掉线时, 可以先kill-server, 然后start-server来确保Server进程启动. 往往可以解决问题.adb logcat -c //清空日志信息adb logcat -s Unity //只查看unity的信息adb logcat &gt; xxx.txt //将之前log信息输出到txt中adb logcat -s Unity &gt; xxx.txt //将之前Unity的log信息输出到txt中Logcat命令列表：-d 将日志显示在控制台后退出-c 清理已存在的日志-f  将日志输出到文件adb logcat -f /sdcard/test.txt">
+    <meta name="og:description" content="找到sdk中的adb路径，添加到环境变量android-sdk\platform-toolsadb kill-serveradb start-server由于adb并不稳定, 有时候莫名的问题掉线时, 可以先kill-server, 然后start-server来确保Server进程启动. 往往可以解决问题.adb logcat -c //清空日志信息adb logcat -s Unity //只查看unity的信息adb logcat &gt; xxx.txt //将之前log信息输出到txt中adb logcat -s Unity &gt; xxx.txt //将之前Unity的log信息输出到txt中Logcat命令列表：-d 将日志显示在控制台后退出-c 清理已存在的日志-f  将日志输出到文件adb logcat -f /sdcard/test.txt">
+      
+    
+    
+        
+    
+    <meta property="og:url" content="https://rockf91.github.io/2019/09/24/adb/">
+    <meta property="og:site_name" content="游戏">
+    <meta property="og:type" content="article">
+    <meta property="og:locale" content="zh_CN" />
+    
+    <meta property="article:published_time" content="2019-09-24">
+    
+    <script src="https://rockf91.github.io/assets/vendor/jquery/dist/jquery.min.js"></script>
+    <script src="https://rockf91.github.io/assets/js/jquery-ui.js"></script>
+    <script src="https://rockf91.github.io/assets/js/main.js"></script>
+</head>
+<body class="" data-mz="">
+    <header class="site-header">
+        <div class="container">
+            <h1><a href="https://rockf91.github.io/" title="游戏"><span class="octicon octicon-mark-github"></span> 游戏</a></h1>
+            <button class="collapsed mobile-visible" type="button" onclick="toggleMenu();">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <nav class="site-header-nav" role="navigation">
+                
+                <a href="https://rockf91.github.io/" class=" site-header-nav-item" target="" title="首页">首页</a>
+                
+                <a href="https://rockf91.github.io/categories/" class=" site-header-nav-item" target="" title="分类">分类</a>
+                
+                <a href="https://rockf91.github.io/wiki/" class=" site-header-nav-item" target="" title="维基">维基</a>
+                
+                <a href="https://rockf91.github.io/links/" class=" site-header-nav-item" target="" title="链接">链接</a>
+                
+                <a href="https://rockf91.github.io/about/" class=" site-header-nav-item" target="" title="关于">关于</a>
+                
+            </nav>
+        </div>
+    </header>
+    <!-- / header -->
+
+    <section class="collection-head small geopattern" data-pattern-id="adb调试">
+<div class="container">
+  <div class="columns">
+    <div class="column three-fourths">
+      <div class="collection-title">
+        <h1 class="collection-header">adb调试</h1>
+        <div class="collection-info">
+          
+          <span class="meta-info">
+            <span class="octicon octicon-calendar"></span> 2019/09/24
+          </span>
+          
+          
+          <span class="meta-info">
+            <span class="octicon octicon-file-directory"></span>
+            <a href="https://rockf91.github.io/categories/#android" title="android">android</a>
+          </span>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<!-- / .banner -->
+<section class="container content">
+<div class="columns">
+  <div class="column three-fourths" >
+    <article class="article-content markdown-body">
+    <!-- more -->
+
+<p>找到sdk中的adb路径，添加到环境变量
+<code class="highlighter-rouge">android-sdk\platform-tools</code></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>adb kill-server
+adb start-server
+</code></pre></div></div>
+<p>由于adb并不稳定, 有时候莫名的问题掉线时, 可以先kill-server, 然后start-server来确保Server进程启动. 往往可以解决问题.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>adb logcat -c //清空日志信息
+
+adb logcat -s Unity //只查看unity的信息
+
+adb logcat &gt; xxx.txt //将之前log信息输出到txt中
+
+adb logcat -s Unity &gt; xxx.txt //将之前Unity的log信息输出到txt中
+</code></pre></div></div>
+
+<p>Logcat命令列表：</p>
+
+<p>-d 将日志显示在控制台后退出
+-c 清理已存在的日志
+-f <filename> 将日志输出到文件</filename></p>
+
+<p><code class="highlighter-rouge">adb logcat -f /sdcard/test.txt</code></p>
+
+    </article>
+    <div class="share">
+      <div class="share-component"></div>
+    </div>
+    <div class="comment">
+      
+
+  
+
+  
+
+
+    </div>
+  </div>
+  <div class="column one-fourth">
+    
+<h3>Search</h3>
+<div id="site_search">
+    <input type="text" id="search_box" placeholder="Search">
+</div>
+
+<ul id="search_results"></ul>
+
+<link rel="stylesheet" type="text/css" href="https://rockf91.github.io/assets/css/modules/sidebar-search.css">
+<script src="https://rockf91.github.io/assets/js/simple-jekyll-search.min.js"></script>
+<script src="https://rockf91.github.io/assets/js/search.js"></script>
+
+<script type="text/javascript">
+SimpleJekyllSearch({
+    searchInput: document.getElementById('search_box'),
+    resultsContainer: document.getElementById('search_results'),
+    json: 'https://rockf91.github.io/assets/search_data.json',
+    searchResultTemplate: '<li><a href="{url}" title="{desc}">{title}</a></li>',
+    noResultsText: 'No results found',
+    limit: 10,
+    fuzzy: false,
+    exclude: ['Welcome']
+})
+</script>
+
+    
+
+    
+<h3 class="post-directory-title mobile-hidden">Table of Contents</h3>
+<div id="post-directory-module" class="mobile-hidden">
+  <section class="post-directory">
+  <!-- Links that trigger the jumping -->
+  <!-- Added by javascript below -->
+  <dl></dl>
+  </section>
+</div>
+
+<script src="https://rockf91.github.io/assets/js/jquery.toc.js"></script>
+
+  </div>
+</div>
+</section>
+<!-- /section.content -->
+
+    <footer class="container">
+        <div class="site-footer" role="contentinfo">
+            <div class="copyright left mobile-block">
+                    © 2015
+                    <span title="rockf91">rockf91</span>
+                    <a href="javascript:window.scrollTo(0,0)" class="right mobile-visible">TOP</a>
+            </div>
+
+            <ul class="site-footer-links right mobile-hidden">
+                <li>
+                    <a href="javascript:window.scrollTo(0,0)" >TOP</a>
+                </li>
+            </ul>
+            <a href="https://github.com/rockf91/rockf91.github.io" target="_blank" aria-label="view source code">
+                <span class="mega-octicon octicon-mark-github" title="GitHub"></span>
+            </a>
+            <ul class="site-footer-links mobile-hidden">
+                
+                <li>
+                    <a href="https://rockf91.github.io/" title="首页" target="">首页</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/categories/" title="分类" target="">分类</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/wiki/" title="维基" target="">维基</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/links/" title="链接" target="">链接</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/about/" title="关于" target="">关于</a>
+                </li>
+                
+                <li><a href="https://rockf91.github.io/feed.xml"><span class="octicon octicon-rss" style="color:orange;"></span></a></li>
+            </ul>
+
+        </div>
+    </footer>
+    <div class="tools-wrapper">
+      <a class="gotop" href="#" title="回到顶部"><span class="octicon octicon-arrow-up"></span></a>
+    </div>
+    <!-- / footer -->
+    <script src="https://rockf91.github.io/assets/vendor/share.js/dist/js/share.min.js"></script>
+    <script src="https://rockf91.github.io/assets/js/geopattern.js"></script>
+    <script src="https://rockf91.github.io/assets/js/prism.js"></script>
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/prism.css">
+    <script>
+      jQuery(document).ready(function($) {
+        // geopattern
+        $('.geopattern').each(function(){
+          $(this).geopattern($(this).data('pattern-id'));
+        });
+       // hljs.initHighlightingOnLoad();
+      });
+    </script>
+
+    
+
+    
+
+    
+
+    
+
+    
+</body>
+</html>

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" prefix="og: http://ogp.me/ns#" class="han-init">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>如何使用gpi-case搭建pico-8平台 &mdash; 游戏</title>
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/primer-css/css/primer.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/primer-markdown/dist/user-content.min.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/octicons/octicons/octicons.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/collection.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/repo-card.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/sections/repo-list.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/sections/mini-repo-list.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/boxed-group.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/common.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/share.js/dist/css/share.min.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/responsive.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/posts/index.css">
+    <!-- Latest compiled and minified CSS -->
+    
+
+    
+    <link rel="canonical" href="https://rockf91.github.io/2019/11/14/gpi-case/">
+    <link rel="alternate" type="application/atom+xml" title="游戏" href="https://rockf91.github.io/feed.xml">
+    <link rel="shortcut icon" href="https://rockf91.github.io/favicon.ico">
+    
+    <meta property="og:title" content="如何使用gpi-case搭建pico-8平台">
+      
+    <meta name="keywords" content="游戏, rockf91">
+    <meta name="og:keywords" content="游戏, rockf91">
+      
+    <meta name="description" content="完整说明一下，组合树莓派，然后安装系统到调试，使用的过程。准备工作需要的硬件清单  ￥399   Retroflag GPi CASE 复古旗GPi套件  ￥80    Raspberry Pi Zero W 树莓派ZeroW  ￥30    MicroSD 卡, 32G  ￥10    MicroSD 卡读卡器  ￥3     AA 5号电池三节（可选）  ￥0     PC/MAC 电脑一台  ￥25    USB Wifi(PC和wifi不在一个网段时需要)    注意树莓派不要买错，买成WH，WH多了个头，装不进去的电池建议买充电电池，不嫌重的话，充电宝也可以      需要的软件清单  retropi系统镜像  gpi case补丁  gpi case安全关机脚本  sd卡格式化工具 rufus3.8  烧录镜像工具 win32diskimager 或者etcher  ssh工具putty 32位 或者64位版本  ftp上传工具 filezilla  pico-8树莓派版本  SDL开始组装硬件套件内有图示说明，照着拼装就没太大问题GPi CASE组合图例  关闭电源开关，取下卡带  打开卡带，小心sd卡封套别掉了，取出 IO转换版  组合一下自带的螺丝刀，往壳上拧上四个螺母  连接 树莓派 和 IO转换板（先不要急着上螺丝，这一步我拧爆一个螺母。。。）  装上sd卡封套，合上外壳，最后拧好4个螺丝开始安装软件  格式化sd卡          32G或更小的，选 FAT 格式，64G或更大的，选 ExFAT 格式        使用烧录工具，把retropi镜像烧入sd卡  安装gpi case补丁          解压 GPi_Case_patch 然后将整个目录文件放到sd卡的根目录下      进入sd卡上的 GPi_Case_patch 目录，双击 install_patch.bat 运行        设置wifi          在sd卡根目录新建 wpa_supplicant.conf 文件，按照下面的参考格式填入内容并保存        country=CNctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdevupdate_config=1   network={ssid="WiFi-A"psk="12345678"key_mgmt=WPA-PSKpriority=1}                #ssid:网络的ssid#psk:密码#priority:连接优先级，数字越大优先级越高（不可以是负数）#scan_ssid:连接隐藏WiFi时需要指定该值为1  如果你的 WiFi 没有密码network={ssid="你的无线网络名称（ssid）"key_mgmt=NONE}      如果你的 WiFi 使用WEP加密network={ssid="你的无线网络名称（ssid）"key_mgmt=NONEwep_key0="你的wifi密码"}      如果你的 WiFi 使用WPA/WPA2加密network={ssid="你的无线网络名称（ssid）"key_mgmt=WPA-PSKpsk="你的wifi密码"}      如果你不清楚 WiFi 的加密模式，可以在安卓手机上用 root explorer 打开 /data/misc/wifi/wpa/       wpa_supplicant.conf，查看 WiFi 的信息。                    每次启动后 wpa_supplicant.conf 这个文件会消失，有改动的话需重新添加        开启ssh服务          在sd卡根目录新建一个空白文件，命名为 ssh。注意要小写且不要有任何扩展名。        远程连接系统IP          sd卡插好，打开电池仓，中间有个安全关机开关设置到 On ，开机      等待开机后，选retropie进入设置界面，找到 SHOW IP 选项进入，记下 IP 地址      pc 打开putty ssh远程连接树莓派，这里注意pc需要和wifi在同一个网段        Host Name 这里填 pi@xxx.xxx.xx.xxx (刚才看到的IP地址)端口 22默认密码 raspberry                    ftp 也连接一下 方便传文件，打开 ftp 连接工具        主机名填 xxx.xxx.xx.xxx (刚才看到的IP地址)用户名 pi端口 22默认密码 raspberry                      配置Gpi case按键          第一次开机需要设置按键，按住任意按键不放就可以开始配置      然后根据提示，一个个按键设置下去      Left/Right shoulder 左右肩键在背后有三个凸点的地方      剩余没有的按键可以按住任意键不放跳过        安装安全关机脚本          在putty打开的ssh窗口中输入        wget -O - "https://raw.githubusercontent.com/RetroFlag/retroflag-picase/master/  install_gpi.sh" | sudo bash                等几分钟，完成后会自动重启              扩展文件系统          等待开机后，选retropie进入设置界面      选择 raspi-config 选项进入      然后选 Advanced Configuration， 然后 expand_rootfs      选 Finish 然后 确认 reboot 重启        拷贝rom游戏          网络邻居或者资源管理器路径输入 \\RETROPIE 找到 roms 文件夹拷入对应平台的游戏即可      配置pico8  解压 pico-8树莓派版本          ftp 打开目录 /home/pi/pico-8 将 pico-8 目录的文件拷入      新建一个文件 Start PICO-8.sh 拷贝到 /home/pi/pico-8      ssh窗口中输入 sudo apt-get install wiringpi 安装 wiringPI        解压 SDL 到 /home/pi/pico-8 目录，变成差不多这样的目录结构 /home/pi/pico-8/SDL2-2.0.10          ssh窗口输入以下命令配置         cd /home/pi/pico-8/SDL2-2.0.10/test sudo chmod 777 configure ./configure make controllermap                    继续输入 ./controllermap 0 &gt;&gt; /home/pi/pico-8/sdl_controllers.txt GPI屏幕上会显示手柄配置        按照提示依次输入对应按键没有的按键 按下B 跳过需要设置 B, A, Y, X, 十字键, L/R 肩键, start 和 select完成后会生成 sdl_controllers.txt 在 /home/pi/pico-8/ 目录下                      配置 在线游玩模式的 pico-8          ftp或者ssh 打开 /opt/retropie/configs/all/emulationstation/es_systems.cfg 或者 /etc/emulationstation/es_systems.cfg 这里可以先备份一下，万一改错了就进不去了      找到同样的 &lt;system&gt;&lt;/system&gt; 结构 加入以下配置         &lt;system&gt; &lt;name&gt;pico8&lt;/name&gt; &lt;fullname&gt;PICO-8&lt;/fullname&gt; &lt;path&gt;/home/pi/pico-8&lt;/path&gt; &lt;extension&gt;.sh .SH&lt;/extension&gt; &lt;command&gt;/opt/retropie/supplementary/runcommand/runcommand.sh 0 "/home/pi/pico-8/pico8 -splore"&lt;/command&gt; &lt;platform&gt;pico8&lt;/platform&gt; &lt;theme&gt;pico8&lt;/theme&gt; &lt;/system&gt;                    (ftp操作) 先修改文件读写权限，然后就可以直接修改文件后保存      (ssh操作) 按 ctrl+x 然后 y 保存退出        配置 读取 rom 的 pico-8          同样文件下加入以下配置        &lt;system&gt;&lt;name&gt;pico8ctm&lt;/name&gt;&lt;fullname&gt;PICO-8&lt;/fullname&gt;&lt;path&gt;/home/pi/RetroPie/roms/pico-8&lt;/path&gt;&lt;extension&gt;.p8&lt;/extension&gt;&lt;command&gt;/opt/retropie/supplementary/runcommand/runcommand.sh 0 "/home/pi/pico8/pico8   -run %ROM%"&lt;/command&gt;&lt;platform&gt;pico8&lt;/platform&gt;&lt;theme&gt;pico8&lt;/theme&gt;&lt;/system&gt;                     ssh操作 输入 shutdown -r now 重启        帧率限制调整          pico8的 _update60 是不限帧的，所以需要调整一下硬件限制~/.lexaloffle/pico-8/config.txt  找到 foreground_sleep_ms 改成 5 左右基本上就不会突然帧率增加了。        到这里就差不多完成了，之后可以拷贝整个sd目录文件做个备份最后，感谢阅读，希望这篇指导可以帮助到您~参考文章：  http://shumeipai.nxez.com/2017/09/13/raspberry-pi-network-configuration-before-boot.html  https://sinisterspatula.github.io/RetroflagGpiGuides/pico8/pico8  https://www.lexaloffle.com/bbs/?tid=3935  https://howchoo.com/g/ndc3njbhytv/retroflag-gpi-setup#configure-the-controller">
+    <meta name="og:description" content="完整说明一下，组合树莓派，然后安装系统到调试，使用的过程。准备工作需要的硬件清单  ￥399   Retroflag GPi CASE 复古旗GPi套件  ￥80    Raspberry Pi Zero W 树莓派ZeroW  ￥30    MicroSD 卡, 32G  ￥10    MicroSD 卡读卡器  ￥3     AA 5号电池三节（可选）  ￥0     PC/MAC 电脑一台  ￥25    USB Wifi(PC和wifi不在一个网段时需要)    注意树莓派不要买错，买成WH，WH多了个头，装不进去的电池建议买充电电池，不嫌重的话，充电宝也可以      需要的软件清单  retropi系统镜像  gpi case补丁  gpi case安全关机脚本  sd卡格式化工具 rufus3.8  烧录镜像工具 win32diskimager 或者etcher  ssh工具putty 32位 或者64位版本  ftp上传工具 filezilla  pico-8树莓派版本  SDL开始组装硬件套件内有图示说明，照着拼装就没太大问题GPi CASE组合图例  关闭电源开关，取下卡带  打开卡带，小心sd卡封套别掉了，取出 IO转换版  组合一下自带的螺丝刀，往壳上拧上四个螺母  连接 树莓派 和 IO转换板（先不要急着上螺丝，这一步我拧爆一个螺母。。。）  装上sd卡封套，合上外壳，最后拧好4个螺丝开始安装软件  格式化sd卡          32G或更小的，选 FAT 格式，64G或更大的，选 ExFAT 格式        使用烧录工具，把retropi镜像烧入sd卡  安装gpi case补丁          解压 GPi_Case_patch 然后将整个目录文件放到sd卡的根目录下      进入sd卡上的 GPi_Case_patch 目录，双击 install_patch.bat 运行        设置wifi          在sd卡根目录新建 wpa_supplicant.conf 文件，按照下面的参考格式填入内容并保存        country=CNctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdevupdate_config=1   network={ssid="WiFi-A"psk="12345678"key_mgmt=WPA-PSKpriority=1}                #ssid:网络的ssid#psk:密码#priority:连接优先级，数字越大优先级越高（不可以是负数）#scan_ssid:连接隐藏WiFi时需要指定该值为1  如果你的 WiFi 没有密码network={ssid="你的无线网络名称（ssid）"key_mgmt=NONE}      如果你的 WiFi 使用WEP加密network={ssid="你的无线网络名称（ssid）"key_mgmt=NONEwep_key0="你的wifi密码"}      如果你的 WiFi 使用WPA/WPA2加密network={ssid="你的无线网络名称（ssid）"key_mgmt=WPA-PSKpsk="你的wifi密码"}      如果你不清楚 WiFi 的加密模式，可以在安卓手机上用 root explorer 打开 /data/misc/wifi/wpa/       wpa_supplicant.conf，查看 WiFi 的信息。                    每次启动后 wpa_supplicant.conf 这个文件会消失，有改动的话需重新添加        开启ssh服务          在sd卡根目录新建一个空白文件，命名为 ssh。注意要小写且不要有任何扩展名。        远程连接系统IP          sd卡插好，打开电池仓，中间有个安全关机开关设置到 On ，开机      等待开机后，选retropie进入设置界面，找到 SHOW IP 选项进入，记下 IP 地址      pc 打开putty ssh远程连接树莓派，这里注意pc需要和wifi在同一个网段        Host Name 这里填 pi@xxx.xxx.xx.xxx (刚才看到的IP地址)端口 22默认密码 raspberry                    ftp 也连接一下 方便传文件，打开 ftp 连接工具        主机名填 xxx.xxx.xx.xxx (刚才看到的IP地址)用户名 pi端口 22默认密码 raspberry                      配置Gpi case按键          第一次开机需要设置按键，按住任意按键不放就可以开始配置      然后根据提示，一个个按键设置下去      Left/Right shoulder 左右肩键在背后有三个凸点的地方      剩余没有的按键可以按住任意键不放跳过        安装安全关机脚本          在putty打开的ssh窗口中输入        wget -O - "https://raw.githubusercontent.com/RetroFlag/retroflag-picase/master/  install_gpi.sh" | sudo bash                等几分钟，完成后会自动重启              扩展文件系统          等待开机后，选retropie进入设置界面      选择 raspi-config 选项进入      然后选 Advanced Configuration， 然后 expand_rootfs      选 Finish 然后 确认 reboot 重启        拷贝rom游戏          网络邻居或者资源管理器路径输入 \\RETROPIE 找到 roms 文件夹拷入对应平台的游戏即可      配置pico8  解压 pico-8树莓派版本          ftp 打开目录 /home/pi/pico-8 将 pico-8 目录的文件拷入      新建一个文件 Start PICO-8.sh 拷贝到 /home/pi/pico-8      ssh窗口中输入 sudo apt-get install wiringpi 安装 wiringPI        解压 SDL 到 /home/pi/pico-8 目录，变成差不多这样的目录结构 /home/pi/pico-8/SDL2-2.0.10          ssh窗口输入以下命令配置         cd /home/pi/pico-8/SDL2-2.0.10/test sudo chmod 777 configure ./configure make controllermap                    继续输入 ./controllermap 0 &gt;&gt; /home/pi/pico-8/sdl_controllers.txt GPI屏幕上会显示手柄配置        按照提示依次输入对应按键没有的按键 按下B 跳过需要设置 B, A, Y, X, 十字键, L/R 肩键, start 和 select完成后会生成 sdl_controllers.txt 在 /home/pi/pico-8/ 目录下                      配置 在线游玩模式的 pico-8          ftp或者ssh 打开 /opt/retropie/configs/all/emulationstation/es_systems.cfg 或者 /etc/emulationstation/es_systems.cfg 这里可以先备份一下，万一改错了就进不去了      找到同样的 &lt;system&gt;&lt;/system&gt; 结构 加入以下配置         &lt;system&gt; &lt;name&gt;pico8&lt;/name&gt; &lt;fullname&gt;PICO-8&lt;/fullname&gt; &lt;path&gt;/home/pi/pico-8&lt;/path&gt; &lt;extension&gt;.sh .SH&lt;/extension&gt; &lt;command&gt;/opt/retropie/supplementary/runcommand/runcommand.sh 0 "/home/pi/pico-8/pico8 -splore"&lt;/command&gt; &lt;platform&gt;pico8&lt;/platform&gt; &lt;theme&gt;pico8&lt;/theme&gt; &lt;/system&gt;                    (ftp操作) 先修改文件读写权限，然后就可以直接修改文件后保存      (ssh操作) 按 ctrl+x 然后 y 保存退出        配置 读取 rom 的 pico-8          同样文件下加入以下配置        &lt;system&gt;&lt;name&gt;pico8ctm&lt;/name&gt;&lt;fullname&gt;PICO-8&lt;/fullname&gt;&lt;path&gt;/home/pi/RetroPie/roms/pico-8&lt;/path&gt;&lt;extension&gt;.p8&lt;/extension&gt;&lt;command&gt;/opt/retropie/supplementary/runcommand/runcommand.sh 0 "/home/pi/pico8/pico8   -run %ROM%"&lt;/command&gt;&lt;platform&gt;pico8&lt;/platform&gt;&lt;theme&gt;pico8&lt;/theme&gt;&lt;/system&gt;                     ssh操作 输入 shutdown -r now 重启        帧率限制调整          pico8的 _update60 是不限帧的，所以需要调整一下硬件限制~/.lexaloffle/pico-8/config.txt  找到 foreground_sleep_ms 改成 5 左右基本上就不会突然帧率增加了。        到这里就差不多完成了，之后可以拷贝整个sd目录文件做个备份最后，感谢阅读，希望这篇指导可以帮助到您~参考文章：  http://shumeipai.nxez.com/2017/09/13/raspberry-pi-network-configuration-before-boot.html  https://sinisterspatula.github.io/RetroflagGpiGuides/pico8/pico8  https://www.lexaloffle.com/bbs/?tid=3935  https://howchoo.com/g/ndc3njbhytv/retroflag-gpi-setup#configure-the-controller">
+      
+    
+    
+        
+    
+    <meta property="og:url" content="https://rockf91.github.io/2019/11/14/gpi-case/">
+    <meta property="og:site_name" content="游戏">
+    <meta property="og:type" content="article">
+    <meta property="og:locale" content="zh_CN" />
+    
+    <meta property="article:published_time" content="2019-11-14">
+    
+    <script src="https://rockf91.github.io/assets/vendor/jquery/dist/jquery.min.js"></script>
+    <script src="https://rockf91.github.io/assets/js/jquery-ui.js"></script>
+    <script src="https://rockf91.github.io/assets/js/main.js"></script>
+</head>
+<body class="" data-mz="">
+    <header class="site-header">
+        <div class="container">
+            <h1><a href="https://rockf91.github.io/" title="游戏"><span class="octicon octicon-mark-github"></span> 游戏</a></h1>
+            <button class="collapsed mobile-visible" type="button" onclick="toggleMenu();">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <nav class="site-header-nav" role="navigation">
+                
+                <a href="https://rockf91.github.io/" class=" site-header-nav-item" target="" title="首页">首页</a>
+                
+                <a href="https://rockf91.github.io/categories/" class=" site-header-nav-item" target="" title="分类">分类</a>
+                
+                <a href="https://rockf91.github.io/wiki/" class=" site-header-nav-item" target="" title="维基">维基</a>
+                
+                <a href="https://rockf91.github.io/links/" class=" site-header-nav-item" target="" title="链接">链接</a>
+                
+                <a href="https://rockf91.github.io/about/" class=" site-header-nav-item" target="" title="关于">关于</a>
+                
+            </nav>
+        </div>
+    </header>
+    <!-- / header -->
+
+    <section class="collection-head small geopattern" data-pattern-id="如何使用gpi-case搭建p">
+<div class="container">
+  <div class="columns">
+    <div class="column three-fourths">
+      <div class="collection-title">
+        <h1 class="collection-header">如何使用gpi-case搭建pico-8平台</h1>
+        <div class="collection-info">
+          
+          <span class="meta-info">
+            <span class="octicon octicon-calendar"></span> 2019/11/14
+          </span>
+          
+          
+          <span class="meta-info">
+            <span class="octicon octicon-file-directory"></span>
+            <a href="https://rockf91.github.io/categories/#pico-8" title="pico-8">pico-8</a>
+          </span>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<!-- / .banner -->
+<section class="container content">
+<div class="columns">
+  <div class="column three-fourths" >
+    <article class="article-content markdown-body">
+    <p>完整说明一下，组合树莓派，然后安装系统到调试，使用的过程。
+<!-- more --></p>
+
+<h2 id="准备工作">准备工作</h2>
+
+<p>需要的硬件清单</p>
+<ul>
+  <li>￥399   Retroflag GPi CASE 复古旗GPi套件</li>
+  <li>￥80    Raspberry Pi Zero W 树莓派ZeroW</li>
+  <li>￥30    MicroSD 卡, 32G</li>
+  <li>￥10    MicroSD 卡读卡器</li>
+  <li>￥3     AA 5号电池三节（可选）</li>
+  <li>￥0     PC/MAC 电脑一台</li>
+  <li>￥25    USB Wifi(PC和wifi不在一个网段时需要)
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>注意树莓派不要买错，买成WH，WH多了个头，装不进去的
+电池建议买充电电池，不嫌重的话，充电宝也可以
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p>需要的软件清单</p>
+
+<ul>
+  <li><a href="https://github.com/RetroPie/RetroPie-Setup/releases/download/4.5.1/retropie-4.5.1-rpi1_zero.img.gz">retropi系统镜像</a></li>
+  <li><a href="http://download.retroflag.com/Products/GPi_Case/GPi_Case_patch.zip">gpi case补丁</a></li>
+  <li><a href="https://github.com/RetroFlag/retroflag-picase/archive/master.zip">gpi case安全关机脚本</a></li>
+  <li><a href="https://github.com/pbatard/rufus/releases/download/v3.8/rufus-3.8.exe">sd卡格式化工具 rufus3.8</a></li>
+  <li><a href="https://sourceforge.net/projects/win32diskimager/files/latest/download">烧录镜像工具 win32diskimager</a> <a href="https://www.balena.io/etcher/">或者etcher</a></li>
+  <li><a href="https://the.earth.li/~sgtatham/putty/latest/w32/putty-0.73-installer.msi">ssh工具putty 32位</a> <a href="https://the.earth.li/~sgtatham/putty/latest/w64/putty-64bit-0.73-installer.msi">或者64位版本</a></li>
+  <li><a href="https://download.filezilla-project.org/client/FileZilla_3.45.1_win64_sponsored-setup.exe">ftp上传工具 filezilla</a></li>
+  <li><a href="https://www.lexaloffle.com/pico-8.php">pico-8树莓派版本</a></li>
+  <li><a href="https://www.libsdl.org/download-2.0.php">SDL</a></li>
+</ul>
+
+<h2 id="开始组装硬件">开始组装硬件</h2>
+
+<p>套件内有图示说明，照着拼装就没太大问题</p>
+
+<p><a href="http://download.retroflag.com/manual/case/GPi_CASE_Manual.pdf">GPi CASE组合图例</a></p>
+
+<ol>
+  <li>关闭电源开关，取下卡带</li>
+  <li>打开卡带，小心sd卡封套别掉了，取出 IO转换版</li>
+  <li>组合一下自带的螺丝刀，往壳上拧上四个螺母</li>
+  <li>连接 树莓派 和 IO转换板（先不要急着上螺丝，这一步我拧爆一个螺母。。。）</li>
+  <li>装上sd卡封套，合上外壳，最后拧好4个螺丝</li>
+</ol>
+
+<h2 id="开始安装软件">开始安装软件</h2>
+
+<ol>
+  <li>格式化sd卡
+    <ul>
+      <li>32G或更小的，选 FAT 格式，64G或更大的，选 ExFAT 格式</li>
+    </ul>
+  </li>
+  <li>使用烧录工具，把retropi镜像烧入sd卡</li>
+  <li>安装gpi case补丁
+    <ul>
+      <li>解压 <code class="highlighter-rouge">GPi_Case_patch</code> 然后将整个目录文件放到sd卡的根目录下</li>
+      <li>进入sd卡上的 <code class="highlighter-rouge">GPi_Case_patch</code> 目录，双击 <code class="highlighter-rouge">install_patch.bat</code> 运行</li>
+    </ul>
+  </li>
+  <li>设置wifi
+    <ul>
+      <li>在sd卡根目录新建 <code class="highlighter-rouge">wpa_supplicant.conf</code> 文件，按照下面的参考格式填入内容并保存
+        <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>country=CN
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+   
+network={
+ssid="WiFi-A"
+psk="12345678"
+key_mgmt=WPA-PSK
+priority=1
+}
+</code></pre></div>        </div>
+        <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#ssid:网络的ssid
+#psk:密码
+#priority:连接优先级，数字越大优先级越高（不可以是负数）
+#scan_ssid:连接隐藏WiFi时需要指定该值为1
+  
+如果你的 WiFi 没有密码
+network={
+ssid="你的无线网络名称（ssid）"
+key_mgmt=NONE
+}
+      
+如果你的 WiFi 使用WEP加密
+network={
+ssid="你的无线网络名称（ssid）"
+key_mgmt=NONE
+wep_key0="你的wifi密码"
+}
+      
+如果你的 WiFi 使用WPA/WPA2加密
+network={
+ssid="你的无线网络名称（ssid）"
+key_mgmt=WPA-PSK
+psk="你的wifi密码"
+}
+      
+如果你不清楚 WiFi 的加密模式，可以在安卓手机上用 root explorer 打开 /data/misc/wifi/wpa/       wpa_supplicant.conf，查看 WiFi 的信息。
+</code></pre></div>        </div>
+      </li>
+      <li>每次启动后 <code class="highlighter-rouge">wpa_supplicant.conf</code> 这个文件会消失，有改动的话需重新添加</li>
+    </ul>
+  </li>
+  <li>开启ssh服务
+    <ul>
+      <li>在sd卡根目录新建一个空白文件，命名为 <code class="highlighter-rouge">ssh</code>。注意要小写且不要有任何扩展名。</li>
+    </ul>
+  </li>
+  <li>远程连接系统IP
+    <ul>
+      <li>sd卡插好，打开电池仓，中间有个安全关机开关设置到 <code class="highlighter-rouge">On</code> ，开机</li>
+      <li>等待开机后，选retropie进入设置界面，找到 <code class="highlighter-rouge">SHOW IP</code> 选项进入，记下 IP 地址</li>
+      <li>pc 打开putty ssh远程连接树莓派，这里注意pc需要和wifi在同一个网段
+        <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Host Name 这里填 pi@xxx.xxx.xx.xxx (刚才看到的IP地址)
+端口 22
+默认密码 raspberry
+</code></pre></div>        </div>
+      </li>
+      <li>ftp 也连接一下 方便传文件，打开 ftp 连接工具
+        <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>主机名填 xxx.xxx.xx.xxx (刚才看到的IP地址)
+用户名 pi
+端口 22
+默认密码 raspberry
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+  <li>配置Gpi case按键
+    <ul>
+      <li>第一次开机需要设置按键，按住任意按键不放就可以开始配置</li>
+      <li>然后根据提示，一个个按键设置下去</li>
+      <li>Left/Right shoulder 左右肩键在背后有三个凸点的地方</li>
+      <li>剩余没有的按键可以按住任意键不放跳过</li>
+    </ul>
+  </li>
+  <li>安装安全关机脚本
+    <ul>
+      <li>在putty打开的ssh窗口中输入
+        <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget -O - "https://raw.githubusercontent.com/RetroFlag/retroflag-picase/master/  install_gpi.sh" | sudo bash
+</code></pre></div>        </div>
+        <p>等几分钟，完成后会自动重启</p>
+      </li>
+    </ul>
+  </li>
+  <li>扩展文件系统
+    <ul>
+      <li>等待开机后，选retropie进入设置界面</li>
+      <li>选择 <code class="highlighter-rouge">raspi-config</code> 选项进入</li>
+      <li>然后选 <code class="highlighter-rouge">Advanced Configuration</code>， 然后 <code class="highlighter-rouge">expand_rootfs</code></li>
+      <li>选 <code class="highlighter-rouge">Finish</code> 然后 确认 <code class="highlighter-rouge">reboot</code> 重启</li>
+    </ul>
+  </li>
+  <li>拷贝rom游戏
+    <ul>
+      <li>网络邻居或者资源管理器路径输入 <code class="highlighter-rouge">\\RETROPIE</code> 找到 <code class="highlighter-rouge">roms</code> 文件夹拷入对应平台的游戏即可</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="配置pico8">配置pico8</h2>
+<ol>
+  <li>解压 pico-8树莓派版本
+    <ul>
+      <li>ftp 打开目录 <code class="highlighter-rouge">/home/pi/pico-8</code> 将 <code class="highlighter-rouge">pico-8</code> 目录的文件拷入</li>
+      <li>新建一个文件 <code class="highlighter-rouge">Start PICO-8.sh</code> 拷贝到 <code class="highlighter-rouge">/home/pi/pico-8</code></li>
+      <li>ssh窗口中输入 <code class="highlighter-rouge">sudo apt-get install wiringpi</code> 安装 <a href="http://wiringpi.com/">wiringPI</a></li>
+    </ul>
+  </li>
+  <li>解压 SDL 到 <code class="highlighter-rouge">/home/pi/pico-8</code> 目录，变成差不多这样的目录结构 <code class="highlighter-rouge">/home/pi/pico-8/SDL2-2.0.10</code>
+    <ul>
+      <li>ssh窗口输入以下命令配置
+        <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> cd /home/pi/pico-8/SDL2-2.0.10/test
+ sudo chmod 777 configure
+ ./configure
+ make controllermap
+</code></pre></div>        </div>
+      </li>
+      <li>继续输入 <code class="highlighter-rouge">./controllermap 0 &gt;&gt; /home/pi/pico-8/sdl_controllers.txt</code> GPI屏幕上会显示手柄配置
+        <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>按照提示依次输入对应按键
+没有的按键 按下B 跳过
+需要设置 B, A, Y, X, 十字键, L/R 肩键, start 和 select
+完成后会生成 sdl_controllers.txt 在 /home/pi/pico-8/ 目录下
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+  <li>配置 在线游玩模式的 pico-8
+    <ul>
+      <li>ftp或者ssh 打开 <code class="highlighter-rouge">/opt/retropie/configs/all/emulationstation/es_systems.cfg</code> 或者 <code class="highlighter-rouge">/etc/emulationstation/es_systems.cfg</code> 这里可以先备份一下，万一改错了就进不去了</li>
+      <li>找到同样的 <code class="highlighter-rouge">&lt;system&gt;&lt;/system&gt;</code> 结构 加入以下配置
+        <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> &lt;system&gt;
+ &lt;name&gt;pico8&lt;/name&gt;
+ &lt;fullname&gt;PICO-8&lt;/fullname&gt;
+ &lt;path&gt;/home/pi/pico-8&lt;/path&gt;
+ &lt;extension&gt;.sh .SH&lt;/extension&gt;
+ &lt;command&gt;/opt/retropie/supplementary/runcommand/runcommand.sh 0 "/home/pi/pico-8/pico8 -splore"&lt;/command&gt;
+ &lt;platform&gt;pico8&lt;/platform&gt;
+ &lt;theme&gt;pico8&lt;/theme&gt;
+ &lt;/system&gt;
+</code></pre></div>        </div>
+      </li>
+      <li>(ftp操作) 先修改文件读写权限，然后就可以直接修改文件后保存</li>
+      <li>(ssh操作) 按 <code class="highlighter-rouge">ctrl+x</code> 然后 <code class="highlighter-rouge">y</code> 保存退出</li>
+    </ul>
+  </li>
+  <li>配置 读取 rom 的 pico-8
+    <ul>
+      <li>同样文件下加入以下配置
+        <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;system&gt;
+&lt;name&gt;pico8ctm&lt;/name&gt;
+&lt;fullname&gt;PICO-8&lt;/fullname&gt;
+&lt;path&gt;/home/pi/RetroPie/roms/pico-8&lt;/path&gt;
+&lt;extension&gt;.p8&lt;/extension&gt;
+&lt;command&gt;/opt/retropie/supplementary/runcommand/runcommand.sh 0 "/home/pi/pico8/pico8   -run %ROM%"&lt;/command&gt;
+&lt;platform&gt;pico8&lt;/platform&gt;
+&lt;theme&gt;pico8&lt;/theme&gt;
+&lt;/system&gt; 
+</code></pre></div>        </div>
+      </li>
+      <li>ssh操作 输入 <code class="highlighter-rouge">shutdown -r now</code> 重启</li>
+    </ul>
+  </li>
+  <li>帧率限制调整
+    <ul>
+      <li>pico8的 <code class="highlighter-rouge">_update60</code> 是不限帧的，所以需要调整一下硬件限制
+<code class="highlighter-rouge">~/.lexaloffle/pico-8/config.txt</code>  找到 <code class="highlighter-rouge">foreground_sleep_ms</code> 改成 <code class="highlighter-rouge">5</code> 左右基本上就不会突然帧率增加了。</li>
+    </ul>
+  </li>
+  <li>到这里就差不多完成了，之后可以拷贝整个sd目录文件做个备份</li>
+</ol>
+
+<p>最后，感谢阅读，希望这篇指导可以帮助到您~</p>
+
+<p>参考文章：</p>
+<ul>
+  <li>http://shumeipai.nxez.com/2017/09/13/raspberry-pi-network-configuration-before-boot.html</li>
+  <li>https://sinisterspatula.github.io/RetroflagGpiGuides/pico8/pico8</li>
+  <li>https://www.lexaloffle.com/bbs/?tid=3935</li>
+  <li>https://howchoo.com/g/ndc3njbhytv/retroflag-gpi-setup#configure-the-controller</li>
+</ul>
+
+    </article>
+    <div class="share">
+      <div class="share-component"></div>
+    </div>
+    <div class="comment">
+      
+
+  
+
+  
+
+
+    </div>
+  </div>
+  <div class="column one-fourth">
+    
+<h3>Search</h3>
+<div id="site_search">
+    <input type="text" id="search_box" placeholder="Search">
+</div>
+
+<ul id="search_results"></ul>
+
+<link rel="stylesheet" type="text/css" href="https://rockf91.github.io/assets/css/modules/sidebar-search.css">
+<script src="https://rockf91.github.io/assets/js/simple-jekyll-search.min.js"></script>
+<script src="https://rockf91.github.io/assets/js/search.js"></script>
+
+<script type="text/javascript">
+SimpleJekyllSearch({
+    searchInput: document.getElementById('search_box'),
+    resultsContainer: document.getElementById('search_results'),
+    json: 'https://rockf91.github.io/assets/search_data.json',
+    searchResultTemplate: '<li><a href="{url}" title="{desc}">{title}</a></li>',
+    noResultsText: 'No results found',
+    limit: 10,
+    fuzzy: false,
+    exclude: ['Welcome']
+})
+</script>
+
+    
+
+    
+<h3 class="post-directory-title mobile-hidden">Table of Contents</h3>
+<div id="post-directory-module" class="mobile-hidden">
+  <section class="post-directory">
+  <!-- Links that trigger the jumping -->
+  <!-- Added by javascript below -->
+  <dl></dl>
+  </section>
+</div>
+
+<script src="https://rockf91.github.io/assets/js/jquery.toc.js"></script>
+
+  </div>
+</div>
+</section>
+<!-- /section.content -->
+
+    <footer class="container">
+        <div class="site-footer" role="contentinfo">
+            <div class="copyright left mobile-block">
+                    © 2015
+                    <span title="rockf91">rockf91</span>
+                    <a href="javascript:window.scrollTo(0,0)" class="right mobile-visible">TOP</a>
+            </div>
+
+            <ul class="site-footer-links right mobile-hidden">
+                <li>
+                    <a href="javascript:window.scrollTo(0,0)" >TOP</a>
+                </li>
+            </ul>
+            <a href="https://github.com/rockf91/rockf91.github.io" target="_blank" aria-label="view source code">
+                <span class="mega-octicon octicon-mark-github" title="GitHub"></span>
+            </a>
+            <ul class="site-footer-links mobile-hidden">
+                
+                <li>
+                    <a href="https://rockf91.github.io/" title="首页" target="">首页</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/categories/" title="分类" target="">分类</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/wiki/" title="维基" target="">维基</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/links/" title="链接" target="">链接</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/about/" title="关于" target="">关于</a>
+                </li>
+                
+                <li><a href="https://rockf91.github.io/feed.xml"><span class="octicon octicon-rss" style="color:orange;"></span></a></li>
+            </ul>
+
+        </div>
+    </footer>
+    <div class="tools-wrapper">
+      <a class="gotop" href="#" title="回到顶部"><span class="octicon octicon-arrow-up"></span></a>
+    </div>
+    <!-- / footer -->
+    <script src="https://rockf91.github.io/assets/vendor/share.js/dist/js/share.min.js"></script>
+    <script src="https://rockf91.github.io/assets/js/geopattern.js"></script>
+    <script src="https://rockf91.github.io/assets/js/prism.js"></script>
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/prism.css">
+    <script>
+      jQuery(document).ready(function($) {
+        // geopattern
+        $('.geopattern').each(function(){
+          $(this).geopattern($(this).data('pattern-id'));
+        });
+       // hljs.initHighlightingOnLoad();
+      });
+    </script>
+
+    
+
+    
+
+    
+
+    
+
+    
+</body>
+</html>

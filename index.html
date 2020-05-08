@@ -1,27 +1,90 @@
----
-layout: default
-class: home
-css: ['pages/index.css']
-comments: false
----
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" prefix="og: http://ogp.me/ns#" class="han-init">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>游戏</title>
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/primer-css/css/primer.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/primer-markdown/dist/user-content.min.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/octicons/octicons/octicons.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/collection.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/repo-card.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/sections/repo-list.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/sections/mini-repo-list.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/boxed-group.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/common.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/share.js/dist/css/share.min.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/responsive.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/posts/index.css">
+    <!-- Latest compiled and minified CSS -->
+    
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/pages/index.css">
+    
 
-<section class="banner">
+    
+    <link rel="canonical" href="https://rockf91.github.io/">
+    <link rel="alternate" type="application/atom+xml" title="游戏" href="https://rockf91.github.io/feed.xml">
+    <link rel="shortcut icon" href="https://rockf91.github.io/favicon.ico">
+    
+    <meta name="keywords" content="游戏, rockf91">
+    <meta name="description" content="rockf91的个人博客">
+    
+    
+        
+    
+    <meta property="og:url" content="https://rockf91.github.io/">
+    <meta property="og:site_name" content="游戏">
+    <meta property="og:type" content="article">
+    <meta property="og:locale" content="zh_CN" />
+    
+    <script src="https://rockf91.github.io/assets/vendor/jquery/dist/jquery.min.js"></script>
+    <script src="https://rockf91.github.io/assets/js/jquery-ui.js"></script>
+    <script src="https://rockf91.github.io/assets/js/main.js"></script>
+</head>
+<body class="home" data-mz="home">
+    <header class="site-header">
+        <div class="container">
+            <h1><a href="https://rockf91.github.io/" title="游戏"><span class="octicon octicon-mark-github"></span> 游戏</a></h1>
+            <button class="collapsed mobile-visible" type="button" onclick="toggleMenu();">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <nav class="site-header-nav" role="navigation">
+                
+                <a href="https://rockf91.github.io/" class=" site-header-nav-item" target="" title="首页">首页</a>
+                
+                <a href="https://rockf91.github.io/categories/" class=" site-header-nav-item" target="" title="分类">分类</a>
+                
+                <a href="https://rockf91.github.io/wiki/" class=" site-header-nav-item" target="" title="维基">维基</a>
+                
+                <a href="https://rockf91.github.io/links/" class=" site-header-nav-item" target="" title="链接">链接</a>
+                
+                <a href="https://rockf91.github.io/about/" class=" site-header-nav-item" target="" title="关于">关于</a>
+                
+            </nav>
+        </div>
+    </header>
+    <!-- / header -->
+
+    <section class="banner">
     <div class="collection-head">
         <div class="container">
             <div class="collection-title">
-              <h1 class="collection-header" id="sub-title"><span>{{ site.subtitle }}</span></h1>
+              <h1 class="collection-header" id="sub-title"><span> </span></h1>
                 <div class="collection-info">
                     <span class="meta-info mobile-hidden">
                         <span class="octicon octicon-location"></span>
-                        {{ site.location }}
+                        Shanghai, China
                     </span>
                     <span class="meta-info">
                         <span class="octicon octicon-organization"></span>
-                        <a href="{{ site.organization_url }}" target="_blank">{{ site.organization }}</a>
+                        <a href="" target="_blank"></a>
                     </span>
                      <span class="meta-info">
                         <span class="octicon octicon-mark-github"></span>
-                        <a href="https://github.com/{{ site.github_username }}" target="_blank">{{ site.github_username }}</a>
+                        <a href="https://github.com/rockf91" target="_blank">rockf91</a>
                     </span>
                 </div>
             </div>
@@ -31,67 +94,1758 @@ comments: false
 <!-- /.banner -->
 <section class="container content">
     <div class="columns">
-        <div class="column two-thirds" >
+        <div class="column two-thirds">
             <ol class="repo-list">
-                {% for post in paginator.posts %}
+                
                 <li class="repo-list-item">
                     <h3 class="repo-list-name">
-                      <a href="{{ site.url }}{{ post.url }}">{{ post.title }}</a>
+                      <a href="https://rockf91.github.io/2020/03/29/iossdk/">unity对接IosSDK</a>
                     </h3>
                     <p class="repo-list-description">
-                        {{ post.excerpt | strip_html | strip }}
+                        Unity Xcode 导出工程的配置
+
+使用PBXProject可以设置很多xcode的配置选项
+
+using UnityEngine;
+using UnityEditor;
+using UnityEditor.Callbacks;
+using System.IO;
+
+#if UNITY_IOS &amp;&amp; UNITY_EDITOR  
+
+using UnityEditor.iOS.Xcode;
+using UnityEditor.iOS.Xcode.Extensions;
+
+class BuildPostProcessor
+{
+    // ios版本xcode工程维护代码  
+    [PostProcessBuild]  
+    public static void OnPostprocessBuild(BuildTarget BuildTarget, string path)  
+    {  
+        if (BuildTarget == BuildTarget.iOS)  
+        {  
+            string projPath = PBXProject.GetPBXProjectPath(path);  
+            PBXProject proj = new PBXProject();  
+            proj.ReadFromString(File.ReadAllText(projPath));  
+
+            // 获取当前项目名字  
+            string target = proj.TargetGuidByName(PBXProject.GetUnityTargetName());  
+
+            // 对所有的编译配置设置选项  
+            proj.SetBuildProperty(target, "ENABLE_BITCODE", "NO");
+            proj.SetBuildProperty(target, "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
+            proj.AddBuildProperty(target, "OTHER_LDFLAGS", "-ObjC");
+
+            // 添加依赖库  
+            proj.AddFrameworkToProject (target, "AdSupport.framework", false);
+            proj.AddFrameworkToProject (target, "CoreTelephony.framework", false);
+            proj.AddFrameworkToProject (target, "QuartzCore.framework", false);
+            proj.AddFrameworkToProject (target, "Security.framework", false);
+            proj.AddFrameworkToProject (target, "StoreKit.framework", false);
+            proj.AddFrameworkToProject (target, "SystemConfiguration.framework", false);
+            proj.AddFrameworkToProject (target, "libc++.tbd", false);
+            proj.AddFrameworkToProject (target, "libz.tbd", false);
+            proj.AddFrameworkToProject (target, "libsqlite3.0.tbd", false);
+            proj.AddFrameworkToProject (target, "libsqlite3.tbd", false);
+            
+            proj.AddFrameworkToProject (target, "CoreFoundation.framework", false);
+            proj.AddFrameworkToProject (target, "CFNetwork.framework", false);
+            proj.AddFrameworkToProject (target, "CoreGraphics.framework", false);
+            proj.AddFrameworkToProject (target, "Foundation.framework", false);
+            proj.AddFrameworkToProject (target, "UIKit.framework", false);
+            proj.AddFrameworkToProject (target, "libresolv.tbd", false);
+            proj.AddFrameworkToProject (target, "UserNotifications.framework", false);
+
+            // 设置签名  
+            //proj.SetBuildProperty (target, "CODE_SIGN_IDENTITY", "iPhone Distribution: _______________");  
+            //proj.SetBuildProperty (target, "PROVISIONING_PROFILE", "********-****-****-****-************");   
+            
+            const string defaultLocationInProj = "Plugins/iOS";
+            const string coreFrameworkName = "xxx_sdk.framework";
+        
+            string framework = Path.Combine(defaultLocationInProj, coreFrameworkName);
+            string fileGuid = proj.AddFile(framework, "Frameworks/" + framework, PBXSourceTree.Sdk);
+        
+            PBXProjectExtensions.AddFileToEmbedFrameworks(proj, target, fileGuid);
+            // 保存工程  
+            proj.WriteToFile (projPath);  
+            
+            // 修改plist  
+            string plistPath = path + "/Info.plist";  
+            PlistDocument plist = new PlistDocument();  
+            plist.ReadFromString(File.ReadAllText(plistPath));  
+            PlistElementDict rootDict = plist.root;  
+
+            // 语音所需要的声明，iOS10必须  
+            rootDict.SetString("NSPhotoLibraryUsageDescription", "是否允许此游戏使用系统相册？");
+            rootDict.SetString("NSPhotoLibraryAddUsageDescription", "是否允许此游戏使用系统相册附加功能？");
+            rootDict.SetString("NSCameraUsageDescription", "允许访问相机");
+
+            //微信白名单
+            PlistElementArray array = rootDict.CreateArray("LSApplicationQueriesSchemes");
+            array.AddString("weixin");
+
+            //微信分享回调
+            PlistElementArray urlArray = rootDict.CreateArray("CFBundleURLTypes"); 
+            PlistElementDict dic = urlArray.AddDict(); 
+            dic.SetString("CFBundleTypeRole", "Editor"); 
+            dic.SetString("CFBundleURLName", "weixin"); 
+            PlistElementArray dicArray = dic.CreateArray("CFBundleURLSchemes"); 
+            dicArray.AddString("xxxxxxkeyxxxxxxx"); 
+
+            PlistElementDict dictTmp = rootDict.CreateDict("NSAppTransportSecurity");
+            dictTmp.SetBoolean( "NSAllowsArbitraryLoads", true);
+
+            // 保存plist  
+            plist.WriteToFile (plistPath);  
+        }  
+    } 
+}
+#endif
+
+
+添加sdk库文件
+
+新建一个入口类 CustomAppController.mm 交互类 MySDK.h MySDK.mm。
+全往这个工程目录 plugins/IOS/ 里扔。这个下面所有的代码和库资源会在打包时放入xcode工程的Libraries下面
+
+Unity 添加自定义的入口和调用类
+
+unity生成的xcode工程默认入口为 UnityAppController 。可以用自定义入口 CustomAppController.mm 替代这个类，并实现sdk需要添加的生命周期回调。
+关键代码为调用 IMPL_APP_CONTROLLER_SUBCLASS（CustomAppController）。
+这个宏的定义是这样的
+#define IMPL_APP_CONTROLLER_SUBCLASS(ClassName) 
+@interface ClassName(OverrideAppDelegate)       
+{
+}
++(void)load;                                    
+@end                                            
+@implementation ClassName(OverrideAppDelegate)  
++(void)load                                     
+{
+    extern const char* AppControllerClassName;  
+    AppControllerClassName = #ClassName;        
+}
+@end
+
+
+这里的代码使用了object-c的一些特性，其中扩展load这个函数的意思就是，在这个类被加载到内存时执行这个事情，它会自动把main里面的
+AppControllerClassName改成你的。然后往生命周期函数的回调里添加sdk要求的函数。
+
+完整代码
+
+#import "UnityAppController.h"
+
+@interface CustomAppController : UnityAppController {}
+@end
+
+IMPL_APP_CONTROLLER_SUBCLASS (CustomAppController)
+
+@implementation CustomAppController
+
+// - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+// //    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+// //    self.window.backgroundColor = [UIColor whiteColor];
+// //    self.window.rootViewController = [[ViewController alloc] init];
+// //    [self.window makeKeyAndVisible];
+//     return YES;
+// }
+
+// - (void)applicationWillResignActive:(UIApplication *)application {
+    // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
+    // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
+// }
+
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary&lt;UIApplicationOpenURLOptionsKey,id&gt; *)options{
+    return YES;
+}
+
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+    return YES;
+}
+
+- (void)applicationDidEnterBackground:(UIApplication *)application {
+}
+
+- (void)applicationWillEnterForeground:(UIApplication *)application {
+}
+
+// - (void)applicationDidBecomeActive:(UIApplication *)application {
+    // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+// }
+
+// - (void)applicationWillTerminate:(UIApplication *)application {
+    // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+// }
+
+//关于屏幕旋转问题 在AppDelegate中加入该函数
+//- (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(nullable UIWindow *)window {
+//    //横屏游戏:UIInterfaceOrientationMaskLandscape  竖屏游戏:UIInterfaceOrientationMaskPortrait
+//    return UIInterfaceOrientationMaskLandscape;
+//}
+
+@end
+
+
+
+Unity 和 Ios 交互
+
+Ios的部分：
+
+MySDK.h
+
+#import &lt;xxx_sdk/xxx_sdk.h&gt;
+
+// Controller to support native rendering callback
+@interface DMSDK : NSObject&lt;
+PlatformDelegate,
+PlatformPayDelegate&gt;
+@end
+
+
+MySDK.mm
+
+#import "DMSDK.h"
+
+@implementation DMSDK
+
+NSString * const UNITY_SDK_OBJ = @"SdkObj";
+
+- (void)SDKInit 
+{
+    [[GHomeAPI sharedGHome] initialize:self appId:@"xxxxxxx11"];
+}
+
+#pragma mark - GHomeAPIInitializeDelegate
+- (void)initializeResult:(NSInteger)resultCode resultMsg:(NSString *)resultMsg{
+    // NSString * string = [NSString stringWithFormat:@"resultCode:%ld,resultMsg:%@",(long)resultCode,resultMsg];
+    // [self appendLogInfo:string];
+//    if (resultCode == 0) {
+//        self.loginBtn.enabled = true;
+//    }
+}
+
+- (void)SDKLogin
+{
+    [[GHomeAPI sharedGHome] login:self];
+}
+#pragma mark - GHomeAPILoginDelegate
+- (void)loginResult:(NSInteger)resultCode resultMsg:(NSString *)resultMsg ticket:(NSString *)ticket userId:(NSString *)userId
+{
+    NSString* string = @"";
+    
+    // GHOMEAPI_CONSTANTS_SUCCESS
+    // GHOMEAPI_CONSTANTS_CANCEL_LOGIN
+    if (0 == resultCode)
+    {
+        string = [NSString stringWithFormat:@"{\"code\":1,\"userid\":\"%@\",\"ticket\":\"%@\",\"callbackType\":\"Login\"}", 
+                    userId, ticket];
+        UnitySendMessage([UNITY_SDK_OBJ UTF8String], "OnGameSdkCallback", [string UTF8String]);
+    }
+    else
+    {
+        string = @"{\"code\":0,\"callbackType\":\"Login\"}";
+        UnitySendMessage([UNITY_SDK_OBJ UTF8String], "OnGameSdkCallback", [string UTF8String]);
+    }
+}
+
+- (void)SDKLogout
+{
+    [[GHomeAPI sharedGHome] logout:self];
+}
+- (void)logoutResult:(NSInteger)resultCode resultMsg:(NSString*)resultMsg
+{
+    // showAlertView(@"logoutResult code[%@] msg[%@]", @(resultCode), resultMsg);
+    NSString* string = @"";
+    
+    if (0 == resultCode)
+    {
+        string = @"{\"code\":1,\"callbackType\":\"LoginOut\"}";
+        UnitySendMessage([UNITY_SDK_OBJ UTF8String], "OnGameSdkCallback", [string UTF8String]);
+    }
+    else
+    {
+        string = @"{\"code\":0,\"callbackType\":\"LoginOut\"}";
+        UnitySendMessage([UNITY_SDK_OBJ UTF8String], "OnGameSdkCallback", [string UTF8String]);
+    }
+}
+
+// 字典转json格式字符串：
++ (NSString*)dictionaryToJson:(NSDictionary *)dic
+{
+    NSError *parseError = nil;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:&amp;parseError];
+    return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+}
+/*!
+* @brief 把格式化的JSON格式的字符串转换成字典
+* @param jsonString JSON格式的字符串
+* @return 返回字典
+*/
++ (NSDictionary *)dictionaryWithJsonString:(NSString *)jsonString {
+    if (jsonString == nil) {
+        return nil;
+    }
+    NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
+    NSError *err;
+    NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:jsonData
+                                            options:NSJSONReadingMutableContainers
+                                            error:&amp;err];
+    if(err) {
+        NSLog(@"json解析失败：%@",err);
+        return nil;
+    }
+    return dic;
+}
+
+- (void)DoExtend:(NSString*)jsonString
+{
+    NSDictionary *parameter = [DMSDK dictionaryWithJsonString:jsonString];
+    [[GHomeAPI sharedGHome] extendFunction:nil type: GHOME_REPORT_ROLE_INFO_TYPE parameter:parameter];
+}
+
+- (void)CopyTextToClipboard:(NSString*)str
+{
+    UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
+    pasteboard.string = str;
+}
+
+- (void)SaveToAlbum:(NSString*)base64Img fileName:(NSString*)name
+{
+    NSData* data=[NSData alloc];
+    data = [data initWithBase64EncodedString:base64Img options:(NSDataBase64DecodingIgnoreUnknownCharacters)];
+    UIImage* img=[UIImage imageWithData:data];
+    UIImageWriteToSavedPhotosAlbum(img, self, @selector(image:didFinishSavingWithError:contextInfo:), nil);
+}
+
+- (void)image:(UIImage *)image didFinishSavingWithError:(NSError *)error contextInfo:(void *)contextInfo
+{
+    if (error != NULL)
+    {
+        //[self Log:[error localizedDescription]];
+    }
+    else
+    {
+        //[self Log:@"succeed"];
+    }
+}
+
+- (void)ShowFloatIcon:(bool)isShow
+{
+
+}
+
+- (NSString*)GetDeviceId
+{
+    return [[GHomeAPI sharedGHome] deviceId];
+}
+
+@end
+
+// NSString 转 CString
+char* MakeStringCopy(const char* string)
+{
+    if (string == NULL)
+        return NULL;
+
+    char* res = (char*)malloc(strlen(string) + 1);
+    strcpy(res, string);
+    return res;
+}
+
+#if defined(__cplusplus)  
+extern "C"{  
+#endif  
+    static MySDK *mySDK;
+    void _PlatformInit()  
+    {  
+        if(mySDK == NULL)  
+        {  
+            mySDK = [[MySDK alloc]init];  
+        }  
+        [mySDK SDKInit];  
+    }
+
+    void _PlatformLogin()  
+    {
+        [mySDK SDKLogin];  
+    }
+
+    void _PlatformLogout()  
+    {
+        [mySDK SDKLogout];  
+    }
+
+    void _PlatformDoExtend(const char *json)  
+    {
+        NSString *str1 = [NSString stringWithCString:json encoding:NSUTF8StringEncoding];
+        [mySDK DoExtend:str1];  
+    }
+
+    void _CopyTextToClipboard(const char *str) 
+    {
+        NSString *str1 = [NSString stringWithCString:str encoding:NSUTF8StringEncoding];
+        [mySDK CopyTextToClipboard:str1];  
+    }
+
+    void _SaveToAlbum(const char *base64Img, const char *name)
+    {
+        NSString *str1 = [NSString stringWithCString:base64Img encoding:NSUTF8StringEncoding];
+        NSString *str2 = [NSString stringWithCString:name encoding:NSUTF8StringEncoding];
+        [mySDK SaveToAlbum:str1 fileName:str2];
+    }
+
+    void _ShowFloatIcon(bool isShow)
+    {
+        [mySDK ShowFloatIcon:isShow];
+    }
+
+    const char* _GetDeviceId()
+    {
+        NSString *str = [mySDK GetDeviceId];
+        return MakeStringCopy([str UTF8String]);
+    }
+
+#if defined(__cplusplus)
+}
+#endif 
+
+
+这里注意 NSString * const UNITY_SDK_OBJ = @"SdkObj"; SdkObj为绑定交互类的 gameObject
+
+然后是Unity的部分：
+
+using System.Collections;
+using System.IO;
+using UnityEngine;
+using LuaInterface;
+using System;
+using Oz.Framework;
+using System.Collections.Generic;
+using Oz.Framework.Utility;
+using System.Runtime.InteropServices;
+
+public class OzSDKManager : MonoBehaviour
+{
+    public static OzSDKManager Instance { get; set; }
+    public OzExtendData extendData = null;
+
+    [NoToLua]
+    private void Awake()
+    {
+        if(Instance == null)
+        {
+            Instance = this;
+        }
+    }
+
+    [NoToLua]
+    void Start () {
+        extendData = new OzExtendData();
+    }
+
+#if !UNITY_EDITOR &amp;&amp; UNITY_IPHONE
+    [DllImport ("__Internal")]
+    private static extern void _PlatformInit();
+    [DllImport ("__Internal")]
+    private static extern void _PlatformLogin();
+    [DllImport ("__Internal")]
+    private static extern void _PlatformLogout();
+    [DllImport ("__Internal")]
+    private static extern void _PlatformDoExtend(string json);
+    [DllImport ("__Internal")]
+    private static extern void _CopyTextToClipboard(string str);
+    [DllImport ("__Internal")]
+    private static extern void _SaveToAlbum(string base64Img, string fileName);
+    [DllImport ("__Internal")]
+    private static extern void _ShowFloatIcon(bool isShow);
+    [DllImport ("__Internal")]
+    [DllImport ("__Internal")]
+    private static extern string _GetDeviceId();
+#elif !UNITY_EDITOR &amp;&amp; UNITY_ANDROID
+    // private AndroidJavaClass ajc_UnityPlayer = null;
+    // private AndroidJavaObject currentActivity = null;
+    private static AndroidJavaClass ajc_SDKCall = null;
+    private static void _PlatformInit()
+    {
+        ajc_SDKCall = new AndroidJavaClass("com.uainter.main.UAMain");
+        string json = "{'channel':'0','debugmode':0,'appid':'xxxx','appkey':'xxx','islandscape':false}";
+        ajc_SDKCall.CallStatic("uaInit",json);
+    }
+    private static void _PlatformLogin()
+    {
+        string json = "{}";
+        ajc_SDKCall.CallStatic("uaLogin",json);
+    }
+    private static void _PlatformLogout()
+    {
+        string json = "{}";
+        ajc_SDKCall.CallStatic("uaLogout",json);
+    }
+    private static void _PlatformDoExtend(string json)
+    {
+        ajc_SDKCall.CallStatic("uaDoExtend",json);
+    }
+    private static void _CopyTextToClipboard(string str)
+    {
+        ajc_SDKCall.CallStatic("copyTextToClipboard", str);
+    }
+    private static void _SaveToAlbum(string base64Img, string fileName)
+    {
+        ajc_SDKCall.CallStatic("SaveToAlbum", base64Img, fileName, "Lapis");
+    }
+    private static void _ShowFloatIcon(bool isShow)
+    {
+        string json = "{'isShow':'"+isShow+"'}";
+        ajc_SDKCall.CallStatic("uaShowFloatIcon",json);
+    }
+    private static string _GetDeviceId()
+    {
+        return ajc_SDKCall.CallStatic&lt;string&gt;("GetDeviceId");
+    }
+#else
+    private static void _PlatformInit(){}
+    private static void _PlatformLogin(){}
+    private static void _PlatformLogout(){}
+    private static void _PlatformDoExtend(string json){}
+    private static void _CopyTextToClipboard(string str){}
+    private static void _SaveToAlbum(string base64Img, string fileName){}
+    private static void _ShowFloatIcon(bool isShow){}
+    private static string _GetDeviceId(){return "";}
+#endif
+    
+    [NoToLua]
+    private Action&lt;String&gt; actionResult;
+
+    public void Init()
+    {
+        //建议在Debug版本中调用此接口打开日志功能，Release版本中注释掉；
+#if CONSOLE_ENABLE
+        GCrashReportInterface.ConfigDebugMode(true);
+#endif
+        //初始化Crash Handler；
+        GCrashReportInterface.InitCrashHandler();
+        //Debug版本建议调用此接口显示设置为不加密；
+#if CONSOLE_ENABLE
+        GCrashReportInterface.EnableEncryptLog(false);
+#endif
+        //
+        _PlatformInit();
+    }
+
+    public void LoginSDK(Action&lt;String&gt; _action)
+    {
+        actionResult = _action;
+        _PlatformLogin();
+    }
+
+    public void LoginOutSDK(Action&lt;String&gt; _action)
+    {
+        actionResult = _action;
+        _PlatformLogout();
+    }
+
+    public void DoExtend(int _type, int _sType)
+    {
+        string json = "";
+        if (_type == 1) {
+            if (_sType == 1) {
+                extendData.submitType = "createRole";
+            }else if (_sType == 2) {
+                extendData.submitType = "selectServer";
+            }else if (_sType == 3) {
+                extendData.submitType = "enterServer";
+            }else if (_sType == 4) {
+                extendData.submitType = "levelUp";
+            }else if (_sType == 5) {
+                extendData.submitType = "exitServer";
+            }
+            json = JsonUtility.ToJson(extendData);
+            LogUtil.Log(json);
+        } else {
+            json = "{'commondId':'"+_type+"'}";
+        }
+        _PlatformDoExtend(json);
+    }
+
+    public void CopyTextToClipboard(string str)
+    {
+        _CopyTextToClipboard(str);
+    }
+
+    public void SaveToAlbum(Texture2D texture2D, string fileName)
+    {
+        byte[] bytes = texture2D.EncodeToJPG();
+        string base64Img = Convert.ToBase64String(bytes);
+        // DebugConsole.Log(base64Img.Length);
+        _SaveToAlbum(base64Img, fileName);
+    }
+    
+    // -- SDK CallBack --
+    [NoToLua]
+    void OnGameSdkCallback(string str)
+    {
+        print ("OnGameSdkCallback str is " + str);
+        // stringToEdit = str;
+        if (null != actionResult)
+        {
+            actionResult(str);
+            actionResult = null;
+        }
+    }
+
+    public void ShowFloatIcon(bool isShow)
+    {
+        _ShowFloatIcon(isShow);
+    }
+
+    public string GetDeviceId()
+    {
+        return _GetDeviceId();
+    }
+
+    [NoToLua]
+    void OnApplicationPause(bool isPause)
+    {
+        if (isPause) {
+            _OnApplicationPause();
+            DoExtend(2, 1);
+        }
+    }
+    
+    [NoToLua]
+    void OnApplicationFocus(bool isFocus)
+    {
+        if (isFocus)
+        {
+            _OnApplicationFocus();
+        }
+    }
+    
+    [NoToLua]
+    void OnApplicationQuit()
+    {
+        _OnApplicationQuit();
+    }
+}
                     </p>
                     <p class="repo-list-meta">
                         <span class="meta-info">
-                          <span class="octicon octicon-calendar"></span> {{ post.date | date: "%Y/%m/%d" }}
+                          <span class="octicon octicon-calendar"></span> 2020/03/29
                         </span>
-                        {% for cat in post.categories %}
+                        
                         <span class="meta-info">
                           <span class="octicon octicon-file-directory"></span>
-                          <a href="{{ site.url }}/categories/#{{ cat }}" title="{{ cat }}">{{ cat }}</a>
+                          <a href="https://rockf91.github.io/categories/#ios" title="ios">ios</a>
                         </span>
-                        {% endfor %}
+                        
                     </p>
                 </li>
-                {% endfor %}
+                
+                <li class="repo-list-item">
+                    <h3 class="repo-list-name">
+                      <a href="https://rockf91.github.io/2019/11/14/gpi-case/">如何使用gpi-case搭建pico-8平台</a>
+                    </h3>
+                    <p class="repo-list-description">
+                        完整说明一下，组合树莓派，然后安装系统到调试，使用的过程。
+
+
+准备工作
+
+需要的硬件清单
+
+  ￥399   Retroflag GPi CASE 复古旗GPi套件
+  ￥80    Raspberry Pi Zero W 树莓派ZeroW
+  ￥30    MicroSD 卡, 32G
+  ￥10    MicroSD 卡读卡器
+  ￥3     AA 5号电池三节（可选）
+  ￥0     PC/MAC 电脑一台
+  ￥25    USB Wifi(PC和wifi不在一个网段时需要)
+    注意树莓派不要买错，买成WH，WH多了个头，装不进去的
+电池建议买充电电池，不嫌重的话，充电宝也可以
+    
+  
+
+
+需要的软件清单
+
+
+  retropi系统镜像
+  gpi case补丁
+  gpi case安全关机脚本
+  sd卡格式化工具 rufus3.8
+  烧录镜像工具 win32diskimager 或者etcher
+  ssh工具putty 32位 或者64位版本
+  ftp上传工具 filezilla
+  pico-8树莓派版本
+  SDL
+
+
+开始组装硬件
+
+套件内有图示说明，照着拼装就没太大问题
+
+GPi CASE组合图例
+
+
+  关闭电源开关，取下卡带
+  打开卡带，小心sd卡封套别掉了，取出 IO转换版
+  组合一下自带的螺丝刀，往壳上拧上四个螺母
+  连接 树莓派 和 IO转换板（先不要急着上螺丝，这一步我拧爆一个螺母。。。）
+  装上sd卡封套，合上外壳，最后拧好4个螺丝
+
+
+开始安装软件
+
+
+  格式化sd卡
+    
+      32G或更小的，选 FAT 格式，64G或更大的，选 ExFAT 格式
+    
+  
+  使用烧录工具，把retropi镜像烧入sd卡
+  安装gpi case补丁
+    
+      解压 GPi_Case_patch 然后将整个目录文件放到sd卡的根目录下
+      进入sd卡上的 GPi_Case_patch 目录，双击 install_patch.bat 运行
+    
+  
+  设置wifi
+    
+      在sd卡根目录新建 wpa_supplicant.conf 文件，按照下面的参考格式填入内容并保存
+        country=CN
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+   
+network={
+ssid="WiFi-A"
+psk="12345678"
+key_mgmt=WPA-PSK
+priority=1
+}
+        
+        #ssid:网络的ssid
+#psk:密码
+#priority:连接优先级，数字越大优先级越高（不可以是负数）
+#scan_ssid:连接隐藏WiFi时需要指定该值为1
+  
+如果你的 WiFi 没有密码
+network={
+ssid="你的无线网络名称（ssid）"
+key_mgmt=NONE
+}
+      
+如果你的 WiFi 使用WEP加密
+network={
+ssid="你的无线网络名称（ssid）"
+key_mgmt=NONE
+wep_key0="你的wifi密码"
+}
+      
+如果你的 WiFi 使用WPA/WPA2加密
+network={
+ssid="你的无线网络名称（ssid）"
+key_mgmt=WPA-PSK
+psk="你的wifi密码"
+}
+      
+如果你不清楚 WiFi 的加密模式，可以在安卓手机上用 root explorer 打开 /data/misc/wifi/wpa/       wpa_supplicant.conf，查看 WiFi 的信息。
+        
+      
+      每次启动后 wpa_supplicant.conf 这个文件会消失，有改动的话需重新添加
+    
+  
+  开启ssh服务
+    
+      在sd卡根目录新建一个空白文件，命名为 ssh。注意要小写且不要有任何扩展名。
+    
+  
+  远程连接系统IP
+    
+      sd卡插好，打开电池仓，中间有个安全关机开关设置到 On ，开机
+      等待开机后，选retropie进入设置界面，找到 SHOW IP 选项进入，记下 IP 地址
+      pc 打开putty ssh远程连接树莓派，这里注意pc需要和wifi在同一个网段
+        Host Name 这里填 pi@xxx.xxx.xx.xxx (刚才看到的IP地址)
+端口 22
+默认密码 raspberry
+        
+      
+      ftp 也连接一下 方便传文件，打开 ftp 连接工具
+        主机名填 xxx.xxx.xx.xxx (刚才看到的IP地址)
+用户名 pi
+端口 22
+默认密码 raspberry
+        
+      
+    
+  
+  配置Gpi case按键
+    
+      第一次开机需要设置按键，按住任意按键不放就可以开始配置
+      然后根据提示，一个个按键设置下去
+      Left/Right shoulder 左右肩键在背后有三个凸点的地方
+      剩余没有的按键可以按住任意键不放跳过
+    
+  
+  安装安全关机脚本
+    
+      在putty打开的ssh窗口中输入
+        wget -O - "https://raw.githubusercontent.com/RetroFlag/retroflag-picase/master/  install_gpi.sh" | sudo bash
+        
+        等几分钟，完成后会自动重启
+      
+    
+  
+  扩展文件系统
+    
+      等待开机后，选retropie进入设置界面
+      选择 raspi-config 选项进入
+      然后选 Advanced Configuration， 然后 expand_rootfs
+      选 Finish 然后 确认 reboot 重启
+    
+  
+  拷贝rom游戏
+    
+      网络邻居或者资源管理器路径输入 \\RETROPIE 找到 roms 文件夹拷入对应平台的游戏即可
+    
+  
+
+
+配置pico8
+
+  解压 pico-8树莓派版本
+    
+      ftp 打开目录 /home/pi/pico-8 将 pico-8 目录的文件拷入
+      新建一个文件 Start PICO-8.sh 拷贝到 /home/pi/pico-8
+      ssh窗口中输入 sudo apt-get install wiringpi 安装 wiringPI
+    
+  
+  解压 SDL 到 /home/pi/pico-8 目录，变成差不多这样的目录结构 /home/pi/pico-8/SDL2-2.0.10
+    
+      ssh窗口输入以下命令配置
+         cd /home/pi/pico-8/SDL2-2.0.10/test
+ sudo chmod 777 configure
+ ./configure
+ make controllermap
+        
+      
+      继续输入 ./controllermap 0 &gt;&gt; /home/pi/pico-8/sdl_controllers.txt GPI屏幕上会显示手柄配置
+        按照提示依次输入对应按键
+没有的按键 按下B 跳过
+需要设置 B, A, Y, X, 十字键, L/R 肩键, start 和 select
+完成后会生成 sdl_controllers.txt 在 /home/pi/pico-8/ 目录下
+        
+      
+    
+  
+  配置 在线游玩模式的 pico-8
+    
+      ftp或者ssh 打开 /opt/retropie/configs/all/emulationstation/es_systems.cfg 或者 /etc/emulationstation/es_systems.cfg 这里可以先备份一下，万一改错了就进不去了
+      找到同样的 &lt;system&gt;&lt;/system&gt; 结构 加入以下配置
+         &lt;system&gt;
+ &lt;name&gt;pico8&lt;/name&gt;
+ &lt;fullname&gt;PICO-8&lt;/fullname&gt;
+ &lt;path&gt;/home/pi/pico-8&lt;/path&gt;
+ &lt;extension&gt;.sh .SH&lt;/extension&gt;
+ &lt;command&gt;/opt/retropie/supplementary/runcommand/runcommand.sh 0 "/home/pi/pico-8/pico8 -splore"&lt;/command&gt;
+ &lt;platform&gt;pico8&lt;/platform&gt;
+ &lt;theme&gt;pico8&lt;/theme&gt;
+ &lt;/system&gt;
+        
+      
+      (ftp操作) 先修改文件读写权限，然后就可以直接修改文件后保存
+      (ssh操作) 按 ctrl+x 然后 y 保存退出
+    
+  
+  配置 读取 rom 的 pico-8
+    
+      同样文件下加入以下配置
+        &lt;system&gt;
+&lt;name&gt;pico8ctm&lt;/name&gt;
+&lt;fullname&gt;PICO-8&lt;/fullname&gt;
+&lt;path&gt;/home/pi/RetroPie/roms/pico-8&lt;/path&gt;
+&lt;extension&gt;.p8&lt;/extension&gt;
+&lt;command&gt;/opt/retropie/supplementary/runcommand/runcommand.sh 0 "/home/pi/pico8/pico8   -run %ROM%"&lt;/command&gt;
+&lt;platform&gt;pico8&lt;/platform&gt;
+&lt;theme&gt;pico8&lt;/theme&gt;
+&lt;/system&gt; 
+        
+      
+      ssh操作 输入 shutdown -r now 重启
+    
+  
+  帧率限制调整
+    
+      pico8的 _update60 是不限帧的，所以需要调整一下硬件限制
+~/.lexaloffle/pico-8/config.txt  找到 foreground_sleep_ms 改成 5 左右基本上就不会突然帧率增加了。
+    
+  
+  到这里就差不多完成了，之后可以拷贝整个sd目录文件做个备份
+
+
+最后，感谢阅读，希望这篇指导可以帮助到您~
+
+参考文章：
+
+  http://shumeipai.nxez.com/2017/09/13/raspberry-pi-network-configuration-before-boot.html
+  https://sinisterspatula.github.io/RetroflagGpiGuides/pico8/pico8
+  https://www.lexaloffle.com/bbs/?tid=3935
+  https://howchoo.com/g/ndc3njbhytv/retroflag-gpi-setup#configure-the-controller
+                    </p>
+                    <p class="repo-list-meta">
+                        <span class="meta-info">
+                          <span class="octicon octicon-calendar"></span> 2019/11/14
+                        </span>
+                        
+                        <span class="meta-info">
+                          <span class="octicon octicon-file-directory"></span>
+                          <a href="https://rockf91.github.io/categories/#pico-8" title="pico-8">pico-8</a>
+                        </span>
+                        
+                    </p>
+                </li>
+                
+                <li class="repo-list-item">
+                    <h3 class="repo-list-name">
+                      <a href="https://rockf91.github.io/2019/09/25/unitsdk/">unity对接AndroidSDK</a>
+                    </h3>
+                    <p class="repo-list-description">
+                        在纯净的eclipse中安装adt插件
+
+先 ping dl.google.com 获取 ip地址 
+打开 C:\Windows\System32\drivers\etc\hosts 文件，加上一行：ip地址 dl.google.com
+例如 203.208.40.36 dl.google.com
+
+在eclipse的help菜单中选择install new software，点击add，地址为adt -： http://dl.google.com/android/eclipse/，展开节点，全选developer tools。去掉contact all update sites during install to find required software,点击下一步，点击完成即可下载。
+
+Eclipse 配置
+Eclipse在创建项目时应该参照jdk目录下的jre路径，有了这个jre之后，有时候会干扰。所以我们指明一下就可以了：
+1.进入window——preference——java——installed jres
+2.点击add——standard vm——jre home指明到的你的jdk路径
+
+Unity 配置
+unity中classes.jar文件路径：点击unity图标右键选择属性-&gt;打开文件位置-&gt;Data-&gt;PlaybackEngines-&gt;androidplayer-&gt;Variations-&gt;mono/il2cpp-&gt;release-&gt;classes-&gt;classes.jar
+
+AndroidManifest.xml 添加启动入口
+
+&lt;activity     
+    android:name="com.unity3d.player.UnityPlayerActivity"
+    android:screenOrientation="landscape"
+    android:label="@string/app_name"&gt;
+    &lt;intent-filter&gt;
+        &lt;action android:name="android.intent.action.MAIN" /&gt;
+        &lt;category android:name="android.intent.category.LAUNCHER" /&gt;
+    &lt;/intent-filter&gt;
+    &lt;meta-data android:name="unityplayer.UnityActivity" android:value="true" /&gt;
+    &lt;meta-data android:name="unityplayer.ForwardNativeEventsToDalvik" android:value="false" /&gt;
+&lt;/activity&gt;
+                    </p>
+                    <p class="repo-list-meta">
+                        <span class="meta-info">
+                          <span class="octicon octicon-calendar"></span> 2019/09/25
+                        </span>
+                        
+                        <span class="meta-info">
+                          <span class="octicon octicon-file-directory"></span>
+                          <a href="https://rockf91.github.io/categories/#android" title="android">android</a>
+                        </span>
+                        
+                    </p>
+                </li>
+                
+                <li class="repo-list-item">
+                    <h3 class="repo-list-name">
+                      <a href="https://rockf91.github.io/2019/09/24/adb/">adb调试</a>
+                    </h3>
+                    <p class="repo-list-description">
+                        找到sdk中的adb路径，添加到环境变量
+android-sdk\platform-tools
+
+adb kill-server
+adb start-server
+
+由于adb并不稳定, 有时候莫名的问题掉线时, 可以先kill-server, 然后start-server来确保Server进程启动. 往往可以解决问题.
+
+adb logcat -c //清空日志信息
+
+adb logcat -s Unity //只查看unity的信息
+
+adb logcat &gt; xxx.txt //将之前log信息输出到txt中
+
+adb logcat -s Unity &gt; xxx.txt //将之前Unity的log信息输出到txt中
+
+
+Logcat命令列表：
+
+-d 将日志显示在控制台后退出
+-c 清理已存在的日志
+-f  将日志输出到文件
+
+adb logcat -f /sdcard/test.txt
+                    </p>
+                    <p class="repo-list-meta">
+                        <span class="meta-info">
+                          <span class="octicon octicon-calendar"></span> 2019/09/24
+                        </span>
+                        
+                        <span class="meta-info">
+                          <span class="octicon octicon-file-directory"></span>
+                          <a href="https://rockf91.github.io/categories/#android" title="android">android</a>
+                        </span>
+                        
+                    </p>
+                </li>
+                
+                <li class="repo-list-item">
+                    <h3 class="repo-list-name">
+                      <a href="https://rockf91.github.io/2019/09/11/blend/">Blend混合命令</a>
+                    </h3>
+                    <p class="repo-list-description">
+                        Blend混合命令
+
+当同时存在透明物体和不透明物体，首先渲染不透明物体，将不透明物体颜色写入颜色缓存，深度写入深度缓冲，然后渲染透明物体（关闭深度写入，开启深度测试），将透明物体的颜色与颜色缓冲中的颜色混合，得到正确结果。
+
+UnityShaderLab提供了相应的Blend混合命令，用于指定后渲染产生的颜色如何与颜色缓存中的颜色进行混合。混合命令由Blend关键字，操作和因子组成，操作默认是加操作，下面给出 Blend 的常用语义：
+
+Blend Off
+
+
+​    关闭混合
+
+Blend SrcFactor DstFactor
+
+
+​    开启混合，SrcFactor 和 DstFactor 为混合因子(其实就是个系数)，S是源颜色，D是目的颜色，混合后的颜色Color如下，其rgb和a值都使用同一套混合因子：
+
+
+
+
+
+Blend SrcFacter DstFactor, SrcFactorA  DstFactorA
+
+
+​    同上，不过额外指定了透明通道的混合因子：
+
+
+
+
+
+支持的一些混合因子：
+
+
+  
+    
+      参数
+      描述
+    
+  
+  
+    
+      Zero
+      Blend factor is (0, 0, 0, 0).
+    
+    
+      One
+      Blend factor is (1, 1, 1, 1).
+    
+    
+      DstColor
+      Blend factor is (Rd, Gd, Bd, Ad).
+    
+    
+      SrcColor
+      Blend factor is (Rs, Gs, Bs, As).
+    
+    
+      OneMinusDstColor
+      Blend factor is (1 - Rd, 1 - Gd, 1 - Bd, 1 - Ad).
+    
+    
+      SrcAlpha
+      Blend factor is (As, As, As, As)
+    
+    
+      OneMinusSrcColor
+      Blend factor is (1 - Rs, 1 - Gs, 1 - Bs, 1 - As).
+    
+    
+      DstAlpha
+      Blend factor is (Ad, Ad, Ad, Ad).
+    
+    
+      OneMinusDstAlpha
+      Blend factor is (1 - Ad, 1 - Ad, 1 - Ad, 1 - Ad).
+    
+    
+      SrcAlphaSaturate
+      Blend factor is (f, f, f, 1); where f = min(As, 1 - Ad).
+    
+    
+      OneMinusSrcAlpha
+      Blend factor is (1 - As, 1 - As, 1 - As, 1 - As).
+    
+  
+
+
+几种常见的混合类型:
+
+//正常（Normal）
+Blend SrcAlpha OneMinusSrcAlpha
+
+//柔和相加（Soft Addtive）
+Blend OneMinusDstAlpha One
+
+//正片叠底（Multiply），即相乘
+Blend DstColor Zero
+
+//两倍相乘（2x Multiply）
+Blend DstColor SrcColor
+
+//变暗（Darken）
+BlendOp Min
+Blend One One
+
+//变亮（Lighten）
+BlendOp Max
+Blend One One
+
+//滤色（Screen）
+Blend OneMinusDstColor One
+
+//线性减淡（Linear Dodge）
+Blend One One
+                    </p>
+                    <p class="repo-list-meta">
+                        <span class="meta-info">
+                          <span class="octicon octicon-calendar"></span> 2019/09/11
+                        </span>
+                        
+                        <span class="meta-info">
+                          <span class="octicon octicon-file-directory"></span>
+                          <a href="https://rockf91.github.io/categories/#shaderLab" title="shaderLab">shaderLab</a>
+                        </span>
+                        
+                    </p>
+                </li>
+                
+                <li class="repo-list-item">
+                    <h3 class="repo-list-name">
+                      <a href="https://rockf91.github.io/2019/01/14/Travis-CI-Push-Set/">Travis CI Push 权限配置</a>
+                    </h3>
+                    <p class="repo-list-description">
+                        要 Travis 向 Github 仓库 Push 的权限，需要由 SSH 协议机制来保证安全性。现在 Github 开放免费私有库使用，Travis Push 私有库通过 SSH 的方式比较方便安全。下面简单讲解一下如何配置。
+
+基本原理
+
+首先，了解一下 git 使用 SSH 协议向 Github 仓库 Push 时采用的 公钥加密 机制。
+
+
+  Github 保存本机生成的 SSH公钥
+  git 客户端发起 Push 请求，Github 接收到后向客户端发送一个随机字符串
+  git 客户端接收到后，使用本地的 SSH私钥 对字符串进行加密，然后发送回 Github
+  Github 使用存储的公钥对字符串进行解密，若和之前发送的字符串匹配，则验证通过。
+
+
+在 Github 中，可以添加用户全局的公钥，对用户的所有仓库具有权限；也可以对每一个仓库单独设置公钥，使得该公钥只能在该仓库的验证步骤中生效，即后文我们会用到的 Deploy Key。
+
+要使得 Travis 能够向 Github 推送，用户需要以某种形式把本地的 SSH私钥 发送给 Travis，直接发送显然是不安全的，于是 Travis 把用户的 SSH 私钥再次加密，然后每次在 CI 容器中解密私钥，再用私钥来完成推送前的验证步骤，加密私钥的过程可以通过其客户端 travis 来完成。
+
+步骤概览
+
+
+  在 Github 上创建一个仓库；
+  为该仓库开启 Travis CI；
+  本地生成公钥并添加到仓库的 Deploy Key；
+  克隆仓库到本地，并进入仓库目录；
+  使用 travis 客户端加密 SSH 私钥；
+  创建 CI 相关文件；
+  推送仓库，触发 CI 并完成配置。
+
+
+下面对钥匙生成和添加、仓库克隆、加密私钥和配置文件进行详细说明。
+
+钥匙生成
+
+生成 RSA Key Pair（使用你的邮箱替换命令中的邮箱）
+
+$ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+
+
+
+连续回车三次，会在 ~/.ssh/ 目录中生成密钥对，其中 ~/.ssh/id_rsa.pub 即是需要添加到仓库的 Deploy Key 的公钥。cat ~/.ssh/id_rsa.pub，然后选择并复制公钥内容，添加到仓库的 Deploy Key。
+
+设置 Deploy Key 的页面为 https://github.com/<your name>/<your repo>/settings/keys，将 your name 和 your name 分别替换为你的用户名和仓库名。注意需要选定 Allow Write Access，开启该公钥对仓库的写权限。
+
+克隆仓库
+
+$ git clone git@github.com:<username>/<reponame>.git
+
+
+
+分别替换 <username> 和 <reponame> 为用户名和仓库名。
+
+克隆完成后 cd 进入仓库目录。
+
+加密私钥
+
+首先安装 travis 客户端（假设系统已安装 Ruby）。
+
+$ gem install travis
+
+
+
+然后使用 Github 账户信息登录
+
+$ travis login --com
+
+
+
+创建 Travis CI 配置文件（空）
+
+$ touch .travis.yml
+
+
+
+登录成功以后使用
+
+$ travis encrypt-file ~/.ssh/id_rsa --add
+
+
+
+加密私钥并将加密信息添加到 .travis.yml。加密成功后 .travis.yml 文件内在before_install段应该有解密私钥的指令，其中解密过程用到的钥匙以环境变量的形式指定，该环境变量的值对其他用户是透明的，从而保证了安全性。
+
+要注意这里，生成的命令的-out选项的值多了一个\，类似 -in ./id_rsa.enc -out ~\/.ssh/id_rsa -d，这会导致报错，要手工去掉。
+
+配置文件
+
+一个通常的实践是，创建多个 git 分支，在某些分支上修改，构建成功后集成到 master 分支。于是假设以下的示例流程：
+
+
+  创建一个 dev 分支，在 dev 分支上修改代码并推送；
+  触发 Travis 的构建程序；
+  若构建成功，将代码（或构建结果）推送到 master 分支。
+
+
+创建 dev 分支
+
+$ git checkout -b dev
+
+
+
+在 .travis.yml 文件中 travis 自动添加的信息（before_install段）下面添加
+
+- chmod 600 ~/.ssh/id_rsa
+- eval "$(ssh-agent -s)"
+- ssh-add ~/.ssh/id_rsa
+- git config --global user.name "Travis Bot"
+- git config --global user.email <your_email>@example.com
+- cd ~
+- git clone --depth=50 --branch=dev git@github.com:<username>/<reponame>.git build_dir
+- cd build_dir
+- git checkout -b master
+
+script:
+- bash -x ./compile.sh
+
+after_success:
+- git add --all
+- git commit -m"<img class="emoji" title=":black_nib:" alt=":black_nib:" src="https://github.githubassets.com/images/icons/emoji/unicode/2712.png" height="20" width="20">Updated By Travis"
+- git push -u origin HEAD:master --force
+
+branches:
+  except:
+    - master
+
+branches:
+  only:
+    - dev
+
+
+
+注意需要替换 user.email, <username>, <reponame> 等配置信息。
+
+注意到 script 段中调用 compile.sh 脚本完成构建，因此需要创建一个 compile.sh 文件，在里面添加项目相关的构建代码。
+
+完成之后初始推送，即可触发 Travis 的第一次构建。
+
+$ git add --all
+$ git commit -m"init"
+$ git push origin dev
+
+
+
+到 Travis 上看看，Travis 构建完成后 master 分支会在构建成功后由Travis的Push更新。
+                    </reponame></username></reponame></username></your_email></reponame></username></reponame></username></your></your></p>
+                    <p class="repo-list-meta">
+                        <span class="meta-info">
+                          <span class="octicon octicon-calendar"></span> 2019/01/14
+                        </span>
+                        
+                        <span class="meta-info">
+                          <span class="octicon octicon-file-directory"></span>
+                          <a href="https://rockf91.github.io/categories/#Travis" title="Travis">Travis</a>
+                        </span>
+                        
+                    </p>
+                </li>
+                
+                <li class="repo-list-item">
+                    <h3 class="repo-list-name">
+                      <a href="https://rockf91.github.io/2018/01/25/nrm/">npm镜像源设置</a>
+                    </h3>
+                    <p class="repo-list-description">
+                        npm设置源
+                    </p>
+                    <p class="repo-list-meta">
+                        <span class="meta-info">
+                          <span class="octicon octicon-calendar"></span> 2018/01/25
+                        </span>
+                        
+                        <span class="meta-info">
+                          <span class="octicon octicon-file-directory"></span>
+                          <a href="https://rockf91.github.io/categories/#npm" title="npm">npm</a>
+                        </span>
+                        
+                    </p>
+                </li>
+                
+                <li class="repo-list-item">
+                    <h3 class="repo-list-name">
+                      <a href="https://rockf91.github.io/2018/01/25/print/">咕咕机api打印</a>
+                    </h3>
+                    <p class="repo-list-description">
+                        咕咕机是一个wifi热敏打印机，可以通过向官方申请api自己提交花式打印。
+
+#!/usr/bin/python
+#-*- coding:utf-8 -*-
+import requests, os
+import datetime
+import base64
+	
+# 向官网申请的key
+ak = '********************************'
+# 设备id
+memobirdID = '****************'
+# 咕咕id
+useridentifying = '******'
+	
+KEY_RES = "showapi_res_code"
+KEY_USERID = "showapi_userid"
+KEY_PRINTID = "printcontentid"
+	
+def getTime():
+	dt = datetime.datetime.now()
+	return dt.strftime('%Y-%m-%d %H:%M:%S')
+
+def getApiUserId():
+	url = "http://open.memobird.cn/home/setuserbind"
+	data = {
+	    'ak': ak,
+	    'timestamp': getTime(),
+	    'memobirdID': memobirdID,
+	    'useridentifying': useridentifying,
+	}
+	res = requests.post(url, data)
+	res.raise_for_status()
+	s = res.json()
+	assert s[KEY_RES] == 1
+	return s[KEY_USERID]
+
+def printpaper(userID, text):
+	url = "http://open.memobird.cn/home/printpaper"
+	content = unicode(text, 'utf8').encode('gbk')
+	data = {
+	    'ak': ak,
+	    'timestamp': getTime(),
+	    'printcontent': 'T:'+ base64.b64encode(content),
+	    'memobirdID': memobirdID,
+	    'userID': userID,
+	}
+	res = requests.post(url, data)
+	res.raise_for_status()
+	s = res.json()
+	assert s[KEY_RES] == 1
+	return s[KEY_PRINTID]
+
+if __name__ == '__main__':
+	apiUserId = getApiUserId()
+	print("apiUserId:", apiUserId)
+	printId = printpaper(apiUserId, "中文打印测试q34fd&amp;*9")
+	print("printId:", printId)
+                    </p>
+                    <p class="repo-list-meta">
+                        <span class="meta-info">
+                          <span class="octicon octicon-calendar"></span> 2018/01/25
+                        </span>
+                        
+                        <span class="meta-info">
+                          <span class="octicon octicon-file-directory"></span>
+                          <a href="https://rockf91.github.io/categories/#memobird" title="memobird">memobird</a>
+                        </span>
+                        
+                    </p>
+                </li>
+                
+                <li class="repo-list-item">
+                    <h3 class="repo-list-name">
+                      <a href="https://rockf91.github.io/2018/01/25/table-no-frame/">jekyll使用markdown创建文章时，table没有边框的问题</a>
+                    </h3>
+                    <p class="repo-list-description">
+                        直接在_layout文件中的default.html中的body区块中加上下面代码, 就能正常显示
+
+
+
+&lt;style&gt;
+  table{
+    border-left:1px solid #000000;border-top:1px solid #000000;
+    width: 100%;
+    word-wrap:break-word; word-break:break-all;
+  }
+  table th{
+  text-align:center;
+  }
+  table th,td{
+    border-right:1px solid #000000;border-bottom:1px solid #000000;
+  }
+&lt;/style&gt;
+                    </p>
+                    <p class="repo-list-meta">
+                        <span class="meta-info">
+                          <span class="octicon octicon-calendar"></span> 2018/01/25
+                        </span>
+                        
+                        <span class="meta-info">
+                          <span class="octicon octicon-file-directory"></span>
+                          <a href="https://rockf91.github.io/categories/#jekyll" title="jekyll">jekyll</a>
+                        </span>
+                        
+                    </p>
+                </li>
+                
+                <li class="repo-list-item">
+                    <h3 class="repo-list-name">
+                      <a href="https://rockf91.github.io/2018/01/25/jekyll/">python新建jekyll文章模板</a>
+                    </h3>
+                    <p class="repo-list-description">
+                        新建jekyll文章需要一个带时间格式的文本文件，每次手动新建非常麻烦，这样的重复劳动就交给python脚本来生成吧。
+
+newArticle.py
+
+# -*- coding:utf-8 -*-
+import datetime,os,getopt,sys
+def main(argv):
+	now = datetime.datetime.now()
+	if len(argv) == 0:
+		strTitle = "new"
+	else:
+		strTitle = argv[0]
+	if len(argv) &lt;= 1:
+		strCategories = "default"
+	else:
+		strCategories = argv[1]
+	strTime = now.strftime('%Y-%m-%d-')
+	strPath = "_posts" + os.sep + strTime + strTitle + ".md"
+	fobj = open(strPath,'w')
+	fobj.write(
+		'---\n'+
+		'layout: '+'post'+'\n'+
+		'title: "'+strTitle+'"\n'+
+		'categories: '+strCategories+'\n'+
+		'---\n')
+	fobj.close()
+if __name__ == '__main__':
+	main(sys.argv[1:])
+
+
+运行jekyll根目录下的newArticle.py
+python newArticle.py arg1 arg2
+
+arg1:标题名，默认值”new”   
+arg2:分类名，默认值”default”
+                    </p>
+                    <p class="repo-list-meta">
+                        <span class="meta-info">
+                          <span class="octicon octicon-calendar"></span> 2018/01/25
+                        </span>
+                        
+                        <span class="meta-info">
+                          <span class="octicon octicon-file-directory"></span>
+                          <a href="https://rockf91.github.io/categories/#python" title="python">python</a>
+                        </span>
+                        
+                    </p>
+                </li>
+                
             </ol>
         </div>
         <div class="column one-third">
-            {% include sidebar-search.html %}
-            {% include sidebar-qrcode.html %}
-            {% include sidebar-popular-repo.html %}
+            
+<h3>Search</h3>
+<div id="site_search">
+    <input type="text" id="search_box" placeholder="Search">
+</div>
+
+<ul id="search_results"></ul>
+
+<link rel="stylesheet" type="text/css" href="https://rockf91.github.io/assets/css/modules/sidebar-search.css">
+<script src="https://rockf91.github.io/assets/js/simple-jekyll-search.min.js"></script>
+<script src="https://rockf91.github.io/assets/js/search.js"></script>
+
+<script type="text/javascript">
+SimpleJekyllSearch({
+    searchInput: document.getElementById('search_box'),
+    resultsContainer: document.getElementById('search_results'),
+    json: 'https://rockf91.github.io/assets/search_data.json',
+    searchResultTemplate: '<li><a href="{url}" title="{desc}">{title}</a></li>',
+    noResultsText: 'No results found',
+    limit: 10,
+    fuzzy: false,
+    exclude: ['Welcome']
+})
+</script>
+
+            
+
+            <h3>My Popular Repositories</h3>
+
+
+
+<a href="https://github.com/rockf91/zFrame" target="_blank" class="card text-center">
+    <div class="thumbnail">
+        <div class="card-image geopattern" data-pattern-id="zFrame">
+            <div class="card-image-cell">
+                <h3 class="card-title">
+                    zFrame
+                </h3>
+            </div>
+        </div>
+        <div class="caption">
+            <div class="card-description">
+                <p class="card-text"></p>
+            </div>
+            <div class="card-text">
+                <span class="meta-info" title="0 stars">
+                    <span class="octicon octicon-star"></span> 0
+                </span>
+                <span class="meta-info" title="0 forks">
+                    <span class="octicon octicon-git-branch"></span> 0
+                </span>
+                <span class="meta-info" title="Last updated：2018-01-25 05:40:42 UTC">
+                    <span class="octicon octicon-clock"></span>
+                    <time datetime="2018-01-25 05:40:42 UTC">2018-01-25</time>
+                </span>
+            </div>
+        </div>
+    </div>
+</a>
+
+<a href="https://github.com/rockf91/ShaderWiki" target="_blank" class="card text-center">
+    <div class="thumbnail">
+        <div class="card-image geopattern" data-pattern-id="ShaderWiki">
+            <div class="card-image-cell">
+                <h3 class="card-title">
+                    ShaderWiki
+                </h3>
+            </div>
+        </div>
+        <div class="caption">
+            <div class="card-description">
+                <p class="card-text"></p>
+            </div>
+            <div class="card-text">
+                <span class="meta-info" title="0 stars">
+                    <span class="octicon octicon-star"></span> 0
+                </span>
+                <span class="meta-info" title="0 forks">
+                    <span class="octicon octicon-git-branch"></span> 0
+                </span>
+                <span class="meta-info" title="Last updated：2019-09-12 03:38:23 UTC">
+                    <span class="octicon octicon-clock"></span>
+                    <time datetime="2019-09-12 03:38:23 UTC">2019-09-12</time>
+                </span>
+            </div>
+        </div>
+    </div>
+</a>
+
+<a href="https://github.com/rockf91/roguelikeTest" target="_blank" class="card text-center">
+    <div class="thumbnail">
+        <div class="card-image geopattern" data-pattern-id="roguelikeTest">
+            <div class="card-image-cell">
+                <h3 class="card-title">
+                    roguelikeTest
+                </h3>
+            </div>
+        </div>
+        <div class="caption">
+            <div class="card-description">
+                <p class="card-text"></p>
+            </div>
+            <div class="card-text">
+                <span class="meta-info" title="0 stars">
+                    <span class="octicon octicon-star"></span> 0
+                </span>
+                <span class="meta-info" title="0 forks">
+                    <span class="octicon octicon-git-branch"></span> 0
+                </span>
+                <span class="meta-info" title="Last updated：2019-12-10 15:35:00 UTC">
+                    <span class="octicon octicon-clock"></span>
+                    <time datetime="2019-12-10 15:35:00 UTC">2019-12-10</time>
+                </span>
+            </div>
+        </div>
+    </div>
+</a>
+
+<a href="https://github.com/rockf91/rockf91.github.io" target="_blank" class="card text-center">
+    <div class="thumbnail">
+        <div class="card-image geopattern" data-pattern-id="rockf91.github.io">
+            <div class="card-image-cell">
+                <h3 class="card-title">
+                    rockf91.github.io
+                </h3>
+            </div>
+        </div>
+        <div class="caption">
+            <div class="card-description">
+                <p class="card-text"></p>
+            </div>
+            <div class="card-text">
+                <span class="meta-info" title="0 stars">
+                    <span class="octicon octicon-star"></span> 0
+                </span>
+                <span class="meta-info" title="0 forks">
+                    <span class="octicon octicon-git-branch"></span> 0
+                </span>
+                <span class="meta-info" title="Last updated：2020-05-08 09:31:35 UTC">
+                    <span class="octicon octicon-clock"></span>
+                    <time datetime="2020-05-08 09:31:35 UTC">2020-05-08</time>
+                </span>
+            </div>
+        </div>
+    </div>
+</a>
+
+<a href="https://github.com/rockf91/mynode" target="_blank" class="card text-center">
+    <div class="thumbnail">
+        <div class="card-image geopattern" data-pattern-id="mynode">
+            <div class="card-image-cell">
+                <h3 class="card-title">
+                    mynode
+                </h3>
+            </div>
+        </div>
+        <div class="caption">
+            <div class="card-description">
+                <p class="card-text"></p>
+            </div>
+            <div class="card-text">
+                <span class="meta-info" title="0 stars">
+                    <span class="octicon octicon-star"></span> 0
+                </span>
+                <span class="meta-info" title="0 forks">
+                    <span class="octicon octicon-git-branch"></span> 0
+                </span>
+                <span class="meta-info" title="Last updated：2017-11-15 18:48:30 UTC">
+                    <span class="octicon octicon-clock"></span>
+                    <time datetime="2017-11-15 18:48:30 UTC">2017-11-15</time>
+                </span>
+            </div>
+        </div>
+    </div>
+</a>
+
+
+
         </div>
     </div>
     <div class="pagination text-align">
       <div class="btn-group">
-        {% if paginator.previous_page %}
-          {% if paginator.previous_page == 1 %}
-              <a href="{{ site.url }}/" class="btn btn-outline">&laquo;</a>
-          {% else %}
-              <a href="{{ site.url }}/page{{paginator.previous_page}}"  class="btn btn-outline">&laquo;</a>
-          {% endif %}
-        {% else %}
-            <button disabled="disabled" href="javascript:;" class="btn btn-outline">&laquo;</button>
-        {% endif %}
-        {% if paginator.page == 1 %}
+        
+            <button disabled href="javascript:;" class="btn btn-outline">«</button>
+        
+        
             <a href="javascript:;" class="active btn btn-outline">1</a>
-        {% else %}
-            <a href="{{ site.url }}/"  class="btn btn-outline">1</a>
-        {% endif %}
-        {% for count in (2..paginator.total_pages) %}
-          {% if count == paginator.page %}
-              <a href="javascript:;"  class="active btn btn-outline">{{count}}</a>
-          {% else %}
-              <a href="{{ site.url }}/page{{count}}"  class="btn btn-outline">{{count}}</a>
-          {% endif %}
-        {% endfor %}
-        {% if paginator.next_page %}
-            <a href="{{ site.url }}/page{{paginator.next_page}}"  class="btn btn-outline">&raquo;</a>
-        {% else %}
-            <button disabled="disabled" href="javascript:;" class="btn btn-outline">&raquo;</button>
-        {% endif %}
+        
+        
+        
+            <button disabled href="javascript:;" class="btn btn-outline">»</button>
+        
         </div>
     </div>
     <!-- /pagination -->
 </section>
 <!-- /section.content -->
+
+    <footer class="container">
+        <div class="site-footer" role="contentinfo">
+            <div class="copyright left mobile-block">
+                    © 2015
+                    <span title="rockf91">rockf91</span>
+                    <a href="javascript:window.scrollTo(0,0)" class="right mobile-visible">TOP</a>
+            </div>
+
+            <ul class="site-footer-links right mobile-hidden">
+                <li>
+                    <a href="javascript:window.scrollTo(0,0)">TOP</a>
+                </li>
+            </ul>
+            <a href="https://github.com/rockf91/rockf91.github.io" target="_blank" aria-label="view source code">
+                <span class="mega-octicon octicon-mark-github" title="GitHub"></span>
+            </a>
+            <ul class="site-footer-links mobile-hidden">
+                
+                <li>
+                    <a href="https://rockf91.github.io/" title="首页" target="">首页</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/categories/" title="分类" target="">分类</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/wiki/" title="维基" target="">维基</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/links/" title="链接" target="">链接</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/about/" title="关于" target="">关于</a>
+                </li>
+                
+                <li><a href="https://rockf91.github.io/feed.xml"><span class="octicon octicon-rss" style="color:orange;"></span></a></li>
+            </ul>
+
+        </div>
+    </footer>
+    <div class="tools-wrapper">
+      <a class="gotop" href="#" title="回到顶部"><span class="octicon octicon-arrow-up"></span></a>
+    </div>
+    <!-- / footer -->
+    <script src="https://rockf91.github.io/assets/vendor/share.js/dist/js/share.min.js"></script>
+    <script src="https://rockf91.github.io/assets/js/geopattern.js"></script>
+    <script src="https://rockf91.github.io/assets/js/prism.js"></script>
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/prism.css">
+    <script>
+      jQuery(document).ready(function($) {
+        // geopattern
+        $('.geopattern').each(function(){
+          $(this).geopattern($(this).data('pattern-id'));
+        });
+       // hljs.initHighlightingOnLoad();
+      });
+    </script>
+
+    
+
+    
+
+    
+
+    
+
+    
+</body>
+</html>

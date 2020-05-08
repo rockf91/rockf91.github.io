@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" prefix="og: http://ogp.me/ns#" class="han-init">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>Blend混合命令 &mdash; 游戏</title>
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/primer-css/css/primer.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/primer-markdown/dist/user-content.min.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/octicons/octicons/octicons.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/collection.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/repo-card.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/sections/repo-list.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/sections/mini-repo-list.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/boxed-group.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/common.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/share.js/dist/css/share.min.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/responsive.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/posts/index.css">
+    <!-- Latest compiled and minified CSS -->
+    
+
+    
+    <link rel="canonical" href="https://rockf91.github.io/2019/09/11/blend/">
+    <link rel="alternate" type="application/atom+xml" title="游戏" href="https://rockf91.github.io/feed.xml">
+    <link rel="shortcut icon" href="https://rockf91.github.io/favicon.ico">
+    
+    <meta property="og:title" content="Blend混合命令">
+      
+    <meta name="keywords" content="游戏, rockf91">
+    <meta name="og:keywords" content="游戏, rockf91">
+      
+    <meta name="description" content="Blend混合命令当同时存在透明物体和不透明物体，首先渲染不透明物体，将不透明物体颜色写入颜色缓存，深度写入深度缓冲，然后渲染透明物体（关闭深度写入，开启深度测试），将透明物体的颜色与颜色缓冲中的颜色混合，得到正确结果。UnityShaderLab提供了相应的Blend混合命令，用于指定后渲染产生的颜色如何与颜色缓存中的颜色进行混合。混合命令由Blend关键字，操作和因子组成，操作默认是加操作，下面给出 Blend 的常用语义：Blend Off​    关闭混合Blend SrcFactor DstFactor​    开启混合，SrcFactor 和 DstFactor 为混合因子(其实就是个系数)，S是源颜色，D是目的颜色，混合后的颜色Color如下，其rgb和a值都使用同一套混合因子：Blend SrcFacter DstFactor, SrcFactorA  DstFactorA​    同上，不过额外指定了透明通道的混合因子：支持的一些混合因子：            参数      描述                  Zero      Blend factor is (0, 0, 0, 0).              One      Blend factor is (1, 1, 1, 1).              DstColor      Blend factor is (Rd, Gd, Bd, Ad).              SrcColor      Blend factor is (Rs, Gs, Bs, As).              OneMinusDstColor      Blend factor is (1 - Rd, 1 - Gd, 1 - Bd, 1 - Ad).              SrcAlpha      Blend factor is (As, As, As, As)              OneMinusSrcColor      Blend factor is (1 - Rs, 1 - Gs, 1 - Bs, 1 - As).              DstAlpha      Blend factor is (Ad, Ad, Ad, Ad).              OneMinusDstAlpha      Blend factor is (1 - Ad, 1 - Ad, 1 - Ad, 1 - Ad).              SrcAlphaSaturate      Blend factor is (f, f, f, 1); where f = min(As, 1 - Ad).              OneMinusSrcAlpha      Blend factor is (1 - As, 1 - As, 1 - As, 1 - As).      几种常见的混合类型://正常（Normal）Blend SrcAlpha OneMinusSrcAlpha//柔和相加（Soft Addtive）Blend OneMinusDstAlpha One//正片叠底（Multiply），即相乘Blend DstColor Zero//两倍相乘（2x Multiply）Blend DstColor SrcColor//变暗（Darken）BlendOp MinBlend One One//变亮（Lighten）BlendOp MaxBlend One One//滤色（Screen）Blend OneMinusDstColor One//线性减淡（Linear Dodge）Blend One One">
+    <meta name="og:description" content="Blend混合命令当同时存在透明物体和不透明物体，首先渲染不透明物体，将不透明物体颜色写入颜色缓存，深度写入深度缓冲，然后渲染透明物体（关闭深度写入，开启深度测试），将透明物体的颜色与颜色缓冲中的颜色混合，得到正确结果。UnityShaderLab提供了相应的Blend混合命令，用于指定后渲染产生的颜色如何与颜色缓存中的颜色进行混合。混合命令由Blend关键字，操作和因子组成，操作默认是加操作，下面给出 Blend 的常用语义：Blend Off​    关闭混合Blend SrcFactor DstFactor​    开启混合，SrcFactor 和 DstFactor 为混合因子(其实就是个系数)，S是源颜色，D是目的颜色，混合后的颜色Color如下，其rgb和a值都使用同一套混合因子：Blend SrcFacter DstFactor, SrcFactorA  DstFactorA​    同上，不过额外指定了透明通道的混合因子：支持的一些混合因子：            参数      描述                  Zero      Blend factor is (0, 0, 0, 0).              One      Blend factor is (1, 1, 1, 1).              DstColor      Blend factor is (Rd, Gd, Bd, Ad).              SrcColor      Blend factor is (Rs, Gs, Bs, As).              OneMinusDstColor      Blend factor is (1 - Rd, 1 - Gd, 1 - Bd, 1 - Ad).              SrcAlpha      Blend factor is (As, As, As, As)              OneMinusSrcColor      Blend factor is (1 - Rs, 1 - Gs, 1 - Bs, 1 - As).              DstAlpha      Blend factor is (Ad, Ad, Ad, Ad).              OneMinusDstAlpha      Blend factor is (1 - Ad, 1 - Ad, 1 - Ad, 1 - Ad).              SrcAlphaSaturate      Blend factor is (f, f, f, 1); where f = min(As, 1 - Ad).              OneMinusSrcAlpha      Blend factor is (1 - As, 1 - As, 1 - As, 1 - As).      几种常见的混合类型://正常（Normal）Blend SrcAlpha OneMinusSrcAlpha//柔和相加（Soft Addtive）Blend OneMinusDstAlpha One//正片叠底（Multiply），即相乘Blend DstColor Zero//两倍相乘（2x Multiply）Blend DstColor SrcColor//变暗（Darken）BlendOp MinBlend One One//变亮（Lighten）BlendOp MaxBlend One One//滤色（Screen）Blend OneMinusDstColor One//线性减淡（Linear Dodge）Blend One One">
+      
+    
+    
+        
+    
+    <meta property="og:url" content="https://rockf91.github.io/2019/09/11/blend/">
+    <meta property="og:site_name" content="游戏">
+    <meta property="og:type" content="article">
+    <meta property="og:locale" content="zh_CN" />
+    
+    <meta property="article:published_time" content="2019-09-11">
+    
+    <script src="https://rockf91.github.io/assets/vendor/jquery/dist/jquery.min.js"></script>
+    <script src="https://rockf91.github.io/assets/js/jquery-ui.js"></script>
+    <script src="https://rockf91.github.io/assets/js/main.js"></script>
+</head>
+<body class="" data-mz="">
+    <header class="site-header">
+        <div class="container">
+            <h1><a href="https://rockf91.github.io/" title="游戏"><span class="octicon octicon-mark-github"></span> 游戏</a></h1>
+            <button class="collapsed mobile-visible" type="button" onclick="toggleMenu();">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <nav class="site-header-nav" role="navigation">
+                
+                <a href="https://rockf91.github.io/" class=" site-header-nav-item" target="" title="首页">首页</a>
+                
+                <a href="https://rockf91.github.io/categories/" class=" site-header-nav-item" target="" title="分类">分类</a>
+                
+                <a href="https://rockf91.github.io/wiki/" class=" site-header-nav-item" target="" title="维基">维基</a>
+                
+                <a href="https://rockf91.github.io/links/" class=" site-header-nav-item" target="" title="链接">链接</a>
+                
+                <a href="https://rockf91.github.io/about/" class=" site-header-nav-item" target="" title="关于">关于</a>
+                
+            </nav>
+        </div>
+    </header>
+    <!-- / header -->
+
+    <section class="collection-head small geopattern" data-pattern-id="Blend混合命令">
+<div class="container">
+  <div class="columns">
+    <div class="column three-fourths">
+      <div class="collection-title">
+        <h1 class="collection-header">Blend混合命令</h1>
+        <div class="collection-info">
+          
+          <span class="meta-info">
+            <span class="octicon octicon-calendar"></span> 2019/09/11
+          </span>
+          
+          
+          <span class="meta-info">
+            <span class="octicon octicon-file-directory"></span>
+            <a href="https://rockf91.github.io/categories/#shaderLab" title="shaderLab">shaderLab</a>
+          </span>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<!-- / .banner -->
+<section class="container content">
+<div class="columns">
+  <div class="column three-fourths" >
+    <article class="article-content markdown-body">
+    <!-- more -->
+
+<h1 id="blend混合命令">Blend混合命令</h1>
+
+<p>当同时存在透明物体和不透明物体，首先渲染不透明物体，将不透明物体颜色写入颜色缓存，深度写入深度缓冲，然后渲染透明物体（关闭深度写入，开启深度测试），将透明物体的颜色与颜色缓冲中的<strong>颜色混合</strong>，得到正确结果。</p>
+
+<p>UnityShaderLab提供了相应的Blend混合命令，用于指定后渲染产生的颜色如何与颜色缓存中的颜色进行混合。混合命令由Blend关键字，操作和因子组成，操作默认是加操作，下面给出 Blend 的常用语义：</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Blend Off
+</code></pre></div></div>
+
+<p>​    关闭混合</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Blend SrcFactor DstFactor
+</code></pre></div></div>
+
+<p>​    开启混合，SrcFactor 和 DstFactor 为混合因子(其实就是个系数)，S是源颜色，D是目的颜色，混合后的颜色Color如下，其rgb和a值都使用同一套混合因子：</p>
+
+<p><img src="https://latex.codecogs.com/gif.latex?\inline&space;\fn_cm&space;Color_{rgb}&space;=&space;SrcFactor&space;*&space;S_{rgb}&space;&plus;&space;DstFactor&space;*&space;D_{rgb}" title="Color_{rgb} = SrcFactor * S_{rgb} + DstFactor * D_{rgb}" /></p>
+
+<p><img src="https://latex.codecogs.com/gif.latex?\inline&space;\fn_cm&space;Color_{a}&space;=&space;SrcFactor&space;*&space;S_{a}&space;&plus;&space;DstFactor&space;*&space;D_{a}" title="Color_{a} = SrcFactor * S_{a} + DstFactor * D_{a}" /></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Blend SrcFacter DstFactor, SrcFactorA  DstFactorA
+</code></pre></div></div>
+
+<p>​    同上，不过额外指定了透明通道的混合因子：</p>
+
+<p><img src="https://latex.codecogs.com/gif.latex?\inline&space;\fn_cm&space;Color_{rgb}&space;=&space;SrcFactor&space;*&space;S_{rgb}&space;&plus;&space;DstFactor&space;*&space;D_{rgb}" title="Color_{rgb} = SrcFactor * S_{rgb} + DstFactor * D_{rgb}" /></p>
+
+<p><img src="https://latex.codecogs.com/gif.latex?\inline&space;\fn_cm&space;Color_{a}&space;=&space;SrcFactorA&space;*&space;S_{a}&space;&plus;&space;DstFactorA&space;*&space;D_{a}" title="Color_{a} = SrcFactorA * S_{a} + DstFactorA * D_{a}" /></p>
+
+<p>支持的一些<a href="https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.html">混合因子</a>：</p>
+
+<table>
+  <thead>
+    <tr>
+      <th><strong>参数</strong></th>
+      <th><strong>描述</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.Zero.html">Zero</a></td>
+      <td>Blend factor is (0, 0, 0, 0).</td>
+    </tr>
+    <tr>
+      <td><a href="https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.One.html">One</a></td>
+      <td>Blend factor is (1, 1, 1, 1).</td>
+    </tr>
+    <tr>
+      <td><a href="https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.DstColor.html">DstColor</a></td>
+      <td>Blend factor is (Rd, Gd, Bd, Ad).</td>
+    </tr>
+    <tr>
+      <td><a href="https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.SrcColor.html">SrcColor</a></td>
+      <td>Blend factor is (Rs, Gs, Bs, As).</td>
+    </tr>
+    <tr>
+      <td><a href="https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.OneMinusDstColor.html">OneMinusDstColor</a></td>
+      <td>Blend factor is (1 - Rd, 1 - Gd, 1 - Bd, 1 - Ad).</td>
+    </tr>
+    <tr>
+      <td><a href="https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.SrcAlpha.html">SrcAlpha</a></td>
+      <td>Blend factor is (As, As, As, As)</td>
+    </tr>
+    <tr>
+      <td><a href="https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.OneMinusSrcColor.html">OneMinusSrcColor</a></td>
+      <td>Blend factor is (1 - Rs, 1 - Gs, 1 - Bs, 1 - As).</td>
+    </tr>
+    <tr>
+      <td><a href="https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.DstAlpha.html">DstAlpha</a></td>
+      <td>Blend factor is (Ad, Ad, Ad, Ad).</td>
+    </tr>
+    <tr>
+      <td><a href="https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.OneMinusDstAlpha.html">OneMinusDstAlpha</a></td>
+      <td>Blend factor is (1 - Ad, 1 - Ad, 1 - Ad, 1 - Ad).</td>
+    </tr>
+    <tr>
+      <td><a href="https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.SrcAlphaSaturate.html">SrcAlphaSaturate</a></td>
+      <td>Blend factor is (f, f, f, 1); where f = min(As, 1 - Ad).</td>
+    </tr>
+    <tr>
+      <td><a href="https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.OneMinusSrcAlpha.html">OneMinusSrcAlpha</a></td>
+      <td>Blend factor is (1 - As, 1 - As, 1 - As, 1 - As).</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>几种常见的混合类型:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//正常（Normal）
+Blend SrcAlpha OneMinusSrcAlpha
+
+//柔和相加（Soft Addtive）
+Blend OneMinusDstAlpha One
+
+//正片叠底（Multiply），即相乘
+Blend DstColor Zero
+
+//两倍相乘（2x Multiply）
+Blend DstColor SrcColor
+
+//变暗（Darken）
+BlendOp Min
+Blend One One
+
+//变亮（Lighten）
+BlendOp Max
+Blend One One
+
+//滤色（Screen）
+Blend OneMinusDstColor One
+
+//线性减淡（Linear Dodge）
+Blend One One
+</code></pre></div></div>
+
+
+    </article>
+    <div class="share">
+      <div class="share-component"></div>
+    </div>
+    <div class="comment">
+      
+
+  
+
+  
+
+
+    </div>
+  </div>
+  <div class="column one-fourth">
+    
+<h3>Search</h3>
+<div id="site_search">
+    <input type="text" id="search_box" placeholder="Search">
+</div>
+
+<ul id="search_results"></ul>
+
+<link rel="stylesheet" type="text/css" href="https://rockf91.github.io/assets/css/modules/sidebar-search.css">
+<script src="https://rockf91.github.io/assets/js/simple-jekyll-search.min.js"></script>
+<script src="https://rockf91.github.io/assets/js/search.js"></script>
+
+<script type="text/javascript">
+SimpleJekyllSearch({
+    searchInput: document.getElementById('search_box'),
+    resultsContainer: document.getElementById('search_results'),
+    json: 'https://rockf91.github.io/assets/search_data.json',
+    searchResultTemplate: '<li><a href="{url}" title="{desc}">{title}</a></li>',
+    noResultsText: 'No results found',
+    limit: 10,
+    fuzzy: false,
+    exclude: ['Welcome']
+})
+</script>
+
+    
+
+    
+<h3 class="post-directory-title mobile-hidden">Table of Contents</h3>
+<div id="post-directory-module" class="mobile-hidden">
+  <section class="post-directory">
+  <!-- Links that trigger the jumping -->
+  <!-- Added by javascript below -->
+  <dl></dl>
+  </section>
+</div>
+
+<script src="https://rockf91.github.io/assets/js/jquery.toc.js"></script>
+
+  </div>
+</div>
+</section>
+<!-- /section.content -->
+
+    <footer class="container">
+        <div class="site-footer" role="contentinfo">
+            <div class="copyright left mobile-block">
+                    © 2015
+                    <span title="rockf91">rockf91</span>
+                    <a href="javascript:window.scrollTo(0,0)" class="right mobile-visible">TOP</a>
+            </div>
+
+            <ul class="site-footer-links right mobile-hidden">
+                <li>
+                    <a href="javascript:window.scrollTo(0,0)" >TOP</a>
+                </li>
+            </ul>
+            <a href="https://github.com/rockf91/rockf91.github.io" target="_blank" aria-label="view source code">
+                <span class="mega-octicon octicon-mark-github" title="GitHub"></span>
+            </a>
+            <ul class="site-footer-links mobile-hidden">
+                
+                <li>
+                    <a href="https://rockf91.github.io/" title="首页" target="">首页</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/categories/" title="分类" target="">分类</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/wiki/" title="维基" target="">维基</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/links/" title="链接" target="">链接</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/about/" title="关于" target="">关于</a>
+                </li>
+                
+                <li><a href="https://rockf91.github.io/feed.xml"><span class="octicon octicon-rss" style="color:orange;"></span></a></li>
+            </ul>
+
+        </div>
+    </footer>
+    <div class="tools-wrapper">
+      <a class="gotop" href="#" title="回到顶部"><span class="octicon octicon-arrow-up"></span></a>
+    </div>
+    <!-- / footer -->
+    <script src="https://rockf91.github.io/assets/vendor/share.js/dist/js/share.min.js"></script>
+    <script src="https://rockf91.github.io/assets/js/geopattern.js"></script>
+    <script src="https://rockf91.github.io/assets/js/prism.js"></script>
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/prism.css">
+    <script>
+      jQuery(document).ready(function($) {
+        // geopattern
+        $('.geopattern').each(function(){
+          $(this).geopattern($(this).data('pattern-id'));
+        });
+       // hljs.initHighlightingOnLoad();
+      });
+    </script>
+
+    
+
+    
+
+    
+
+    
+
+    
+</body>
+</html>

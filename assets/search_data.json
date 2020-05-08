@@ -1,25 +1,144 @@
----
----
-{% capture json %}
+
+
 [
-  {% for pg in site.pages %}
-  {% if pg.title != nil %}
+  
+  
     {
-      "title"    : "{{ pg.title | escape }}",
-      "url"      : "{{ site.url }}{{ pg.url }}"
+      "title"    : "页面没有找到",
+      "url"      : "https://rockf91.github.io/404.html"
     } ,
-  {% endif %}
-  {% endfor %}
-
-  {% for doc in site.documents %}
+  
+  
+  
     {
-      "title"    : "{{ doc.title | escape }}",
-      "category" : "{{ doc.categories[0] | xml_escape }}",
-      {% if site.simple_jekyll_search.fulltext %}"content": {{ doc.content | markdownify | strip_html | replace:'"','' | jsonify | replace:'\n',' ' | replace:'   ',' ' | replace:'  ',' ' | replace:'\',' ' }},{% endif %}
-      "url"      : "{{ site.url }}{{ doc.url }}"
-    } {% unless forloop.last %},{% endunless %}
-  {% endfor %}
-]
-{% endcapture %}
+      "title"    : "About",
+      "url"      : "https://rockf91.github.io/about/"
+    } ,
+  
+  
+  
+    {
+      "title"    : "归档",
+      "url"      : "https://rockf91.github.io/archives/"
+    } ,
+  
+  
+  
+    {
+      "title"    : "Categories",
+      "url"      : "https://rockf91.github.io/categories/"
+    } ,
+  
+  
+  
+  
+  
+    {
+      "title"    : "Links",
+      "url"      : "https://rockf91.github.io/links/"
+    } ,
+  
+  
+  
+    {
+      "title"    : "Open Source Projects",
+      "url"      : "https://rockf91.github.io/open-source/"
+    } ,
+  
+  
+  
+  
+  
+    {
+      "title"    : "Wiki",
+      "url"      : "https://rockf91.github.io/wiki/"
+    } ,
+  
+  
+  
+  
+  
+  
+  
+  
 
-{{ json | lstrip }}
+  
+    {
+      "title"    : "python新建jekyll文章模板",
+      "category" : "python",
+      
+      "url"      : "https://rockf91.github.io/2018/01/25/jekyll/"
+    } ,
+  
+    {
+      "title"    : "jekyll使用markdown创建文章时，table没有边框的问题",
+      "category" : "jekyll",
+      
+      "url"      : "https://rockf91.github.io/2018/01/25/table-no-frame/"
+    } ,
+  
+    {
+      "title"    : "咕咕机api打印",
+      "category" : "memobird",
+      
+      "url"      : "https://rockf91.github.io/2018/01/25/print/"
+    } ,
+  
+    {
+      "title"    : "npm镜像源设置",
+      "category" : "npm",
+      
+      "url"      : "https://rockf91.github.io/2018/01/25/nrm/"
+    } ,
+  
+    {
+      "title"    : "Travis CI Push 权限配置",
+      "category" : "Travis",
+      
+      "url"      : "https://rockf91.github.io/2019/01/14/Travis-CI-Push-Set/"
+    } ,
+  
+    {
+      "title"    : "Blend混合命令",
+      "category" : "shaderLab",
+      
+      "url"      : "https://rockf91.github.io/2019/09/11/blend/"
+    } ,
+  
+    {
+      "title"    : "adb调试",
+      "category" : "android",
+      
+      "url"      : "https://rockf91.github.io/2019/09/24/adb/"
+    } ,
+  
+    {
+      "title"    : "unity对接AndroidSDK",
+      "category" : "android",
+      
+      "url"      : "https://rockf91.github.io/2019/09/25/unitsdk/"
+    } ,
+  
+    {
+      "title"    : "如何使用gpi-case搭建pico-8平台",
+      "category" : "pico-8",
+      
+      "url"      : "https://rockf91.github.io/2019/11/14/gpi-case/"
+    } ,
+  
+    {
+      "title"    : "unity对接IosSDK",
+      "category" : "ios",
+      
+      "url"      : "https://rockf91.github.io/2020/03/29/iossdk/"
+    } ,
+  
+    {
+      "title"    : "Wiki Template",
+      "category" : "cate1",
+      
+      "url"      : "https://rockf91.github.io/wiki/template/"
+    } 
+  
+]
+

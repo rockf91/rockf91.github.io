@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" prefix="og: http://ogp.me/ns#" class="han-init">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>npm镜像源设置 &mdash; 游戏</title>
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/primer-css/css/primer.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/primer-markdown/dist/user-content.min.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/octicons/octicons/octicons.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/collection.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/repo-card.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/sections/repo-list.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/sections/mini-repo-list.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/boxed-group.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/common.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/share.js/dist/css/share.min.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/responsive.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/posts/index.css">
+    <!-- Latest compiled and minified CSS -->
+    
+
+    
+    <link rel="canonical" href="https://rockf91.github.io/2018/01/25/nrm/">
+    <link rel="alternate" type="application/atom+xml" title="游戏" href="https://rockf91.github.io/feed.xml">
+    <link rel="shortcut icon" href="https://rockf91.github.io/favicon.ico">
+    
+    <meta property="og:title" content="npm镜像源设置">
+      
+    <meta name="keywords" content="游戏, rockf91">
+    <meta name="og:keywords" content="游戏, rockf91">
+      
+    <meta name="description" content="npm设置源">
+    <meta name="og:description" content="npm设置源">
+      
+    
+    
+        
+    
+    <meta property="og:url" content="https://rockf91.github.io/2018/01/25/nrm/">
+    <meta property="og:site_name" content="游戏">
+    <meta property="og:type" content="article">
+    <meta property="og:locale" content="zh_CN" />
+    
+    <meta property="article:published_time" content="2018-01-25">
+    
+    <script src="https://rockf91.github.io/assets/vendor/jquery/dist/jquery.min.js"></script>
+    <script src="https://rockf91.github.io/assets/js/jquery-ui.js"></script>
+    <script src="https://rockf91.github.io/assets/js/main.js"></script>
+</head>
+<body class="" data-mz="">
+    <header class="site-header">
+        <div class="container">
+            <h1><a href="https://rockf91.github.io/" title="游戏"><span class="octicon octicon-mark-github"></span> 游戏</a></h1>
+            <button class="collapsed mobile-visible" type="button" onclick="toggleMenu();">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <nav class="site-header-nav" role="navigation">
+                
+                <a href="https://rockf91.github.io/" class=" site-header-nav-item" target="" title="首页">首页</a>
+                
+                <a href="https://rockf91.github.io/categories/" class=" site-header-nav-item" target="" title="分类">分类</a>
+                
+                <a href="https://rockf91.github.io/wiki/" class=" site-header-nav-item" target="" title="维基">维基</a>
+                
+                <a href="https://rockf91.github.io/links/" class=" site-header-nav-item" target="" title="链接">链接</a>
+                
+                <a href="https://rockf91.github.io/about/" class=" site-header-nav-item" target="" title="关于">关于</a>
+                
+            </nav>
+        </div>
+    </header>
+    <!-- / header -->
+
+    <section class="collection-head small geopattern" data-pattern-id="npm镜像源设置">
+<div class="container">
+  <div class="columns">
+    <div class="column three-fourths">
+      <div class="collection-title">
+        <h1 class="collection-header">npm镜像源设置</h1>
+        <div class="collection-info">
+          
+          <span class="meta-info">
+            <span class="octicon octicon-calendar"></span> 2018/01/25
+          </span>
+          
+          
+          <span class="meta-info">
+            <span class="octicon octicon-file-directory"></span>
+            <a href="https://rockf91.github.io/categories/#npm" title="npm">npm</a>
+          </span>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<!-- / .banner -->
+<section class="container content">
+<div class="columns">
+  <div class="column three-fourths" >
+    <article class="article-content markdown-body">
+    <h2 id="npm设置源">npm设置源</h2>
+
+<p>默认源国内经常连不上，国内的源经常失效，怎么办呢，来试试nrm源管理器吧。</p>
+
+<!-- more -->
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm config set registry http://registry.cnpmjs.org 
+npm info underscore （如果上面配置正确这个命令会有字符串response）
+</code></pre></div></div>
+<p>删除源
+<code class="highlighter-rouge">npm config delete registry</code>
+或者 
+<code class="highlighter-rouge">npm config edit </code>
+找到要删的那行删除</p>
+
+<h2 id="nrm--快速切换-npm-源-附带测速功能">nrm —— 快速切换 NPM 源 （附带测速功能）</h2>
+
+<p>nrm 是一个 NPM 源管理器，允许你快速地在如下 NPM 源间切换：</p>
+
+<ul>
+  <li><a href="https://www.npmjs.org/">npm</a></li>
+  <li><a href="http://cnpmjs.org/">cnpm</a></li>
+  <li><a href="http://strongloop.com/">strongloop</a></li>
+  <li><a href="http://npmjs.eu/">european</a></li>
+  <li><a href="http://npmjs.org.au/">australia</a></li>
+  <li><a href="https://www.nodejitsu.com/">nodejitsu</a></li>
+  <li><a href="http://npm.taobao.org/">taobao</a></li>
+</ul>
+
+<h2 id="安装">安装</h2>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm install -g nrm
+</code></pre></div></div>
+
+<h2 id="使用">使用</h2>
+
+<h3 id="列出可选的源">列出可选的源</h3>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nrm ls                                                                                                                                    
+
+* npm ---- https://registry.npmjs.org/
+  cnpm --- http://r.cnpmjs.org/
+  taobao - http://registry.npm.taobao.org/
+  eu ----- http://registry.npmjs.eu/
+  au ----- http://registry.npmjs.org.au/
+  sl ----- http://npm.strongloop.com/
+  nj ----- https://registry.nodejitsu.com/
+</code></pre></div></div>
+
+<p>带 <code class="highlighter-rouge">*</code> 的是当前使用的源，上面的输出表明当前源是官方源。</p>
+
+<h3 id="切换">切换</h3>
+
+<p>切换到taobao</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nrm use taobao                                                                                                                             
+
+   Registry has been set to: http://registry.npm.taobao.org/
+</code></pre></div></div>
+
+<h3 id="增加源">增加源</h3>
+
+<p>你可以增加定制的源，特别适用于添加企业内部的私有源。<a href="http://segmentfault.com/a/1190000000368906">私有源可以使用cnpmjs架设</a>。</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nrm add  &lt;registry&gt; &lt;url&gt; [home]
+</code></pre></div></div>
+
+<h3 id="删除源">删除源</h3>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nrm del &lt;registry&gt;
+</code></pre></div></div>
+
+<h3 id="测试速度">测试速度</h3>
+
+<p>你还可以通过 <code class="highlighter-rouge">nrm test</code> 测试相应源的响应时间。</p>
+
+<p>例如，测试官方源的响应时间：</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nrm test npm                                                                                                                               
+
+  npm ---- 1328ms
+</code></pre></div></div>
+
+<p>测试所有源的响应时间：</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nrm test                                                                                                                                   
+
+  npm ---- 891ms
+  cnpm --- 1213ms
+* taobao - 460ms
+  eu ----- 3859ms
+  au ----- 1073ms
+  sl ----- 4150ms
+  nj ----- 8008ms
+</code></pre></div></div>
+
+<p>注意，为了取得较准确的结果，可以考虑多次测试取平均值。</p>
+
+    </article>
+    <div class="share">
+      <div class="share-component"></div>
+    </div>
+    <div class="comment">
+      
+
+  
+
+  
+
+
+    </div>
+  </div>
+  <div class="column one-fourth">
+    
+<h3>Search</h3>
+<div id="site_search">
+    <input type="text" id="search_box" placeholder="Search">
+</div>
+
+<ul id="search_results"></ul>
+
+<link rel="stylesheet" type="text/css" href="https://rockf91.github.io/assets/css/modules/sidebar-search.css">
+<script src="https://rockf91.github.io/assets/js/simple-jekyll-search.min.js"></script>
+<script src="https://rockf91.github.io/assets/js/search.js"></script>
+
+<script type="text/javascript">
+SimpleJekyllSearch({
+    searchInput: document.getElementById('search_box'),
+    resultsContainer: document.getElementById('search_results'),
+    json: 'https://rockf91.github.io/assets/search_data.json',
+    searchResultTemplate: '<li><a href="{url}" title="{desc}">{title}</a></li>',
+    noResultsText: 'No results found',
+    limit: 10,
+    fuzzy: false,
+    exclude: ['Welcome']
+})
+</script>
+
+    
+
+    
+<h3 class="post-directory-title mobile-hidden">Table of Contents</h3>
+<div id="post-directory-module" class="mobile-hidden">
+  <section class="post-directory">
+  <!-- Links that trigger the jumping -->
+  <!-- Added by javascript below -->
+  <dl></dl>
+  </section>
+</div>
+
+<script src="https://rockf91.github.io/assets/js/jquery.toc.js"></script>
+
+  </div>
+</div>
+</section>
+<!-- /section.content -->
+
+    <footer class="container">
+        <div class="site-footer" role="contentinfo">
+            <div class="copyright left mobile-block">
+                    © 2015
+                    <span title="rockf91">rockf91</span>
+                    <a href="javascript:window.scrollTo(0,0)" class="right mobile-visible">TOP</a>
+            </div>
+
+            <ul class="site-footer-links right mobile-hidden">
+                <li>
+                    <a href="javascript:window.scrollTo(0,0)" >TOP</a>
+                </li>
+            </ul>
+            <a href="https://github.com/rockf91/rockf91.github.io" target="_blank" aria-label="view source code">
+                <span class="mega-octicon octicon-mark-github" title="GitHub"></span>
+            </a>
+            <ul class="site-footer-links mobile-hidden">
+                
+                <li>
+                    <a href="https://rockf91.github.io/" title="首页" target="">首页</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/categories/" title="分类" target="">分类</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/wiki/" title="维基" target="">维基</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/links/" title="链接" target="">链接</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/about/" title="关于" target="">关于</a>
+                </li>
+                
+                <li><a href="https://rockf91.github.io/feed.xml"><span class="octicon octicon-rss" style="color:orange;"></span></a></li>
+            </ul>
+
+        </div>
+    </footer>
+    <div class="tools-wrapper">
+      <a class="gotop" href="#" title="回到顶部"><span class="octicon octicon-arrow-up"></span></a>
+    </div>
+    <!-- / footer -->
+    <script src="https://rockf91.github.io/assets/vendor/share.js/dist/js/share.min.js"></script>
+    <script src="https://rockf91.github.io/assets/js/geopattern.js"></script>
+    <script src="https://rockf91.github.io/assets/js/prism.js"></script>
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/prism.css">
+    <script>
+      jQuery(document).ready(function($) {
+        // geopattern
+        $('.geopattern').each(function(){
+          $(this).geopattern($(this).data('pattern-id'));
+        });
+       // hljs.initHighlightingOnLoad();
+      });
+    </script>
+
+    
+
+    
+
+    
+
+    
+
+    
+</body>
+</html>

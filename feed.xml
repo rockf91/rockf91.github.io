@@ -1,0 +1,1394 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="https://rockf91.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://rockf91.github.io/" rel="alternate" type="text/html" /><updated>2020-05-08T17:32:52+08:00</updated><id>https://rockf91.github.io/feed.xml</id><title type="html">游戏</title><subtitle>rockf91的个人博客</subtitle><author><name>rockf91</name></author><entry><title type="html">unity对接IosSDK</title><link href="https://rockf91.github.io/2020/03/29/iossdk/" rel="alternate" type="text/html" title="unity对接IosSDK" /><published>2020-03-29T00:21:38+08:00</published><updated>2020-03-29T00:21:38+08:00</updated><id>https://rockf91.github.io/2020/03/29/iossdk</id><content type="html" xml:base="https://rockf91.github.io/2020/03/29/iossdk/">&lt;!-- more --&gt;
+&lt;h2 id=&quot;unity-xcode-导出工程的配置&quot;&gt;Unity Xcode 导出工程的配置&lt;/h2&gt;
+
+&lt;p&gt;使用PBXProject可以设置很多xcode的配置选项&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;using UnityEngine;
+using UnityEditor;
+using UnityEditor.Callbacks;
+using System.IO;
+
+#if UNITY_IOS &amp;amp;&amp;amp; UNITY_EDITOR  
+
+using UnityEditor.iOS.Xcode;
+using UnityEditor.iOS.Xcode.Extensions;
+
+class BuildPostProcessor
+{
+    // ios版本xcode工程维护代码  
+    [PostProcessBuild]  
+    public static void OnPostprocessBuild(BuildTarget BuildTarget, string path)  
+    {  
+        if (BuildTarget == BuildTarget.iOS)  
+        {  
+            string projPath = PBXProject.GetPBXProjectPath(path);  
+            PBXProject proj = new PBXProject();  
+            proj.ReadFromString(File.ReadAllText(projPath));  
+
+            // 获取当前项目名字  
+            string target = proj.TargetGuidByName(PBXProject.GetUnityTargetName());  
+
+            // 对所有的编译配置设置选项  
+            proj.SetBuildProperty(target, &quot;ENABLE_BITCODE&quot;, &quot;NO&quot;);
+            proj.SetBuildProperty(target, &quot;ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES&quot;, &quot;YES&quot;);
+            proj.AddBuildProperty(target, &quot;OTHER_LDFLAGS&quot;, &quot;-ObjC&quot;);
+
+            // 添加依赖库  
+            proj.AddFrameworkToProject (target, &quot;AdSupport.framework&quot;, false);
+            proj.AddFrameworkToProject (target, &quot;CoreTelephony.framework&quot;, false);
+            proj.AddFrameworkToProject (target, &quot;QuartzCore.framework&quot;, false);
+            proj.AddFrameworkToProject (target, &quot;Security.framework&quot;, false);
+            proj.AddFrameworkToProject (target, &quot;StoreKit.framework&quot;, false);
+            proj.AddFrameworkToProject (target, &quot;SystemConfiguration.framework&quot;, false);
+            proj.AddFrameworkToProject (target, &quot;libc++.tbd&quot;, false);
+            proj.AddFrameworkToProject (target, &quot;libz.tbd&quot;, false);
+            proj.AddFrameworkToProject (target, &quot;libsqlite3.0.tbd&quot;, false);
+            proj.AddFrameworkToProject (target, &quot;libsqlite3.tbd&quot;, false);
+            
+            proj.AddFrameworkToProject (target, &quot;CoreFoundation.framework&quot;, false);
+            proj.AddFrameworkToProject (target, &quot;CFNetwork.framework&quot;, false);
+            proj.AddFrameworkToProject (target, &quot;CoreGraphics.framework&quot;, false);
+            proj.AddFrameworkToProject (target, &quot;Foundation.framework&quot;, false);
+            proj.AddFrameworkToProject (target, &quot;UIKit.framework&quot;, false);
+            proj.AddFrameworkToProject (target, &quot;libresolv.tbd&quot;, false);
+            proj.AddFrameworkToProject (target, &quot;UserNotifications.framework&quot;, false);
+
+            // 设置签名  
+            //proj.SetBuildProperty (target, &quot;CODE_SIGN_IDENTITY&quot;, &quot;iPhone Distribution: _______________&quot;);  
+            //proj.SetBuildProperty (target, &quot;PROVISIONING_PROFILE&quot;, &quot;********-****-****-****-************&quot;);   
+            
+            const string defaultLocationInProj = &quot;Plugins/iOS&quot;;
+            const string coreFrameworkName = &quot;xxx_sdk.framework&quot;;
+        
+            string framework = Path.Combine(defaultLocationInProj, coreFrameworkName);
+            string fileGuid = proj.AddFile(framework, &quot;Frameworks/&quot; + framework, PBXSourceTree.Sdk);
+        
+            PBXProjectExtensions.AddFileToEmbedFrameworks(proj, target, fileGuid);
+            // 保存工程  
+            proj.WriteToFile (projPath);  
+            
+            // 修改plist  
+            string plistPath = path + &quot;/Info.plist&quot;;  
+            PlistDocument plist = new PlistDocument();  
+            plist.ReadFromString(File.ReadAllText(plistPath));  
+            PlistElementDict rootDict = plist.root;  
+
+            // 语音所需要的声明，iOS10必须  
+            rootDict.SetString(&quot;NSPhotoLibraryUsageDescription&quot;, &quot;是否允许此游戏使用系统相册？&quot;);
+            rootDict.SetString(&quot;NSPhotoLibraryAddUsageDescription&quot;, &quot;是否允许此游戏使用系统相册附加功能？&quot;);
+            rootDict.SetString(&quot;NSCameraUsageDescription&quot;, &quot;允许访问相机&quot;);
+
+            //微信白名单
+            PlistElementArray array = rootDict.CreateArray(&quot;LSApplicationQueriesSchemes&quot;);
+            array.AddString(&quot;weixin&quot;);
+
+            //微信分享回调
+            PlistElementArray urlArray = rootDict.CreateArray(&quot;CFBundleURLTypes&quot;); 
+            PlistElementDict dic = urlArray.AddDict(); 
+            dic.SetString(&quot;CFBundleTypeRole&quot;, &quot;Editor&quot;); 
+            dic.SetString(&quot;CFBundleURLName&quot;, &quot;weixin&quot;); 
+            PlistElementArray dicArray = dic.CreateArray(&quot;CFBundleURLSchemes&quot;); 
+            dicArray.AddString(&quot;xxxxxxkeyxxxxxxx&quot;); 
+
+            PlistElementDict dictTmp = rootDict.CreateDict(&quot;NSAppTransportSecurity&quot;);
+            dictTmp.SetBoolean( &quot;NSAllowsArbitraryLoads&quot;, true);
+
+            // 保存plist  
+            plist.WriteToFile (plistPath);  
+        }  
+    } 
+}
+#endif
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;添加sdk库文件&quot;&gt;添加sdk库文件&lt;/h2&gt;
+
+&lt;p&gt;新建一个入口类 &lt;code class=&quot;highlighter-rouge&quot;&gt;CustomAppController.mm&lt;/code&gt; 交互类 &lt;code class=&quot;highlighter-rouge&quot;&gt;MySDK.h&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;MySDK.mm&lt;/code&gt;。
+全往这个工程目录 &lt;code class=&quot;highlighter-rouge&quot;&gt;plugins/IOS/&lt;/code&gt; 里扔。这个下面所有的代码和库资源会在打包时放入xcode工程的Libraries下面&lt;/p&gt;
+
+&lt;h2 id=&quot;unity-添加自定义的入口和调用类&quot;&gt;Unity 添加自定义的入口和调用类&lt;/h2&gt;
+
+&lt;p&gt;unity生成的xcode工程默认入口为 &lt;code class=&quot;highlighter-rouge&quot;&gt;UnityAppController&lt;/code&gt; 。可以用自定义入口 &lt;code class=&quot;highlighter-rouge&quot;&gt;CustomAppController.mm&lt;/code&gt; 替代这个类，并实现sdk需要添加的生命周期回调。
+关键代码为调用 &lt;code class=&quot;highlighter-rouge&quot;&gt;IMPL_APP_CONTROLLER_SUBCLASS（CustomAppController）&lt;/code&gt;。
+这个宏的定义是这样的&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#define IMPL_APP_CONTROLLER_SUBCLASS(ClassName) 
+@interface ClassName(OverrideAppDelegate)       
+{
+}
++(void)load;                                    
+@end                                            
+@implementation ClassName(OverrideAppDelegate)  
++(void)load                                     
+{
+    extern const char* AppControllerClassName;  
+    AppControllerClassName = #ClassName;        
+}
+@end
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;这里的代码使用了object-c的一些特性，其中扩展load这个函数的意思就是，在这个类被加载到内存时执行这个事情，它会自动把main里面的
+AppControllerClassName改成你的。然后往生命周期函数的回调里添加sdk要求的函数。&lt;/p&gt;
+
+&lt;p&gt;完整代码&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#import &quot;UnityAppController.h&quot;
+
+@interface CustomAppController : UnityAppController {}
+@end
+
+IMPL_APP_CONTROLLER_SUBCLASS (CustomAppController)
+
+@implementation CustomAppController
+
+// - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+// //    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+// //    self.window.backgroundColor = [UIColor whiteColor];
+// //    self.window.rootViewController = [[ViewController alloc] init];
+// //    [self.window makeKeyAndVisible];
+//     return YES;
+// }
+
+// - (void)applicationWillResignActive:(UIApplication *)application {
+    // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
+    // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
+// }
+
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary&amp;lt;UIApplicationOpenURLOptionsKey,id&amp;gt; *)options{
+    return YES;
+}
+
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+    return YES;
+}
+
+- (void)applicationDidEnterBackground:(UIApplication *)application {
+}
+
+- (void)applicationWillEnterForeground:(UIApplication *)application {
+}
+
+// - (void)applicationDidBecomeActive:(UIApplication *)application {
+    // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+// }
+
+// - (void)applicationWillTerminate:(UIApplication *)application {
+    // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+// }
+
+//关于屏幕旋转问题 在AppDelegate中加入该函数
+//- (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(nullable UIWindow *)window {
+//    //横屏游戏:UIInterfaceOrientationMaskLandscape  竖屏游戏:UIInterfaceOrientationMaskPortrait
+//    return UIInterfaceOrientationMaskLandscape;
+//}
+
+@end
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;unity-和-ios-交互&quot;&gt;Unity 和 Ios 交互&lt;/h2&gt;
+
+&lt;p&gt;Ios的部分：&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;MySDK.h&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#import &amp;lt;xxx_sdk/xxx_sdk.h&amp;gt;
+
+// Controller to support native rendering callback
+@interface DMSDK : NSObject&amp;lt;
+PlatformDelegate,
+PlatformPayDelegate&amp;gt;
+@end
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;MySDK.mm&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#import &quot;DMSDK.h&quot;
+
+@implementation DMSDK
+
+NSString * const UNITY_SDK_OBJ = @&quot;SdkObj&quot;;
+
+- (void)SDKInit 
+{
+    [[GHomeAPI sharedGHome] initialize:self appId:@&quot;xxxxxxx11&quot;];
+}
+
+#pragma mark - GHomeAPIInitializeDelegate
+- (void)initializeResult:(NSInteger)resultCode resultMsg:(NSString *)resultMsg{
+    // NSString * string = [NSString stringWithFormat:@&quot;resultCode:%ld,resultMsg:%@&quot;,(long)resultCode,resultMsg];
+    // [self appendLogInfo:string];
+//    if (resultCode == 0) {
+//        self.loginBtn.enabled = true;
+//    }
+}
+
+- (void)SDKLogin
+{
+    [[GHomeAPI sharedGHome] login:self];
+}
+#pragma mark - GHomeAPILoginDelegate
+- (void)loginResult:(NSInteger)resultCode resultMsg:(NSString *)resultMsg ticket:(NSString *)ticket userId:(NSString *)userId
+{
+    NSString* string = @&quot;&quot;;
+    
+    // GHOMEAPI_CONSTANTS_SUCCESS
+    // GHOMEAPI_CONSTANTS_CANCEL_LOGIN
+    if (0 == resultCode)
+    {
+        string = [NSString stringWithFormat:@&quot;{\&quot;code\&quot;:1,\&quot;userid\&quot;:\&quot;%@\&quot;,\&quot;ticket\&quot;:\&quot;%@\&quot;,\&quot;callbackType\&quot;:\&quot;Login\&quot;}&quot;, 
+                    userId, ticket];
+        UnitySendMessage([UNITY_SDK_OBJ UTF8String], &quot;OnGameSdkCallback&quot;, [string UTF8String]);
+    }
+    else
+    {
+        string = @&quot;{\&quot;code\&quot;:0,\&quot;callbackType\&quot;:\&quot;Login\&quot;}&quot;;
+        UnitySendMessage([UNITY_SDK_OBJ UTF8String], &quot;OnGameSdkCallback&quot;, [string UTF8String]);
+    }
+}
+
+- (void)SDKLogout
+{
+    [[GHomeAPI sharedGHome] logout:self];
+}
+- (void)logoutResult:(NSInteger)resultCode resultMsg:(NSString*)resultMsg
+{
+    // showAlertView(@&quot;logoutResult code[%@] msg[%@]&quot;, @(resultCode), resultMsg);
+    NSString* string = @&quot;&quot;;
+    
+    if (0 == resultCode)
+    {
+        string = @&quot;{\&quot;code\&quot;:1,\&quot;callbackType\&quot;:\&quot;LoginOut\&quot;}&quot;;
+        UnitySendMessage([UNITY_SDK_OBJ UTF8String], &quot;OnGameSdkCallback&quot;, [string UTF8String]);
+    }
+    else
+    {
+        string = @&quot;{\&quot;code\&quot;:0,\&quot;callbackType\&quot;:\&quot;LoginOut\&quot;}&quot;;
+        UnitySendMessage([UNITY_SDK_OBJ UTF8String], &quot;OnGameSdkCallback&quot;, [string UTF8String]);
+    }
+}
+
+// 字典转json格式字符串：
++ (NSString*)dictionaryToJson:(NSDictionary *)dic
+{
+    NSError *parseError = nil;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:&amp;amp;parseError];
+    return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+}
+/*!
+* @brief 把格式化的JSON格式的字符串转换成字典
+* @param jsonString JSON格式的字符串
+* @return 返回字典
+*/
++ (NSDictionary *)dictionaryWithJsonString:(NSString *)jsonString {
+    if (jsonString == nil) {
+        return nil;
+    }
+    NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
+    NSError *err;
+    NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:jsonData
+                                            options:NSJSONReadingMutableContainers
+                                            error:&amp;amp;err];
+    if(err) {
+        NSLog(@&quot;json解析失败：%@&quot;,err);
+        return nil;
+    }
+    return dic;
+}
+
+- (void)DoExtend:(NSString*)jsonString
+{
+    NSDictionary *parameter = [DMSDK dictionaryWithJsonString:jsonString];
+    [[GHomeAPI sharedGHome] extendFunction:nil type: GHOME_REPORT_ROLE_INFO_TYPE parameter:parameter];
+}
+
+- (void)CopyTextToClipboard:(NSString*)str
+{
+    UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
+    pasteboard.string = str;
+}
+
+- (void)SaveToAlbum:(NSString*)base64Img fileName:(NSString*)name
+{
+    NSData* data=[NSData alloc];
+    data = [data initWithBase64EncodedString:base64Img options:(NSDataBase64DecodingIgnoreUnknownCharacters)];
+    UIImage* img=[UIImage imageWithData:data];
+    UIImageWriteToSavedPhotosAlbum(img, self, @selector(image:didFinishSavingWithError:contextInfo:), nil);
+}
+
+- (void)image:(UIImage *)image didFinishSavingWithError:(NSError *)error contextInfo:(void *)contextInfo
+{
+    if (error != NULL)
+    {
+        //[self Log:[error localizedDescription]];
+    }
+    else
+    {
+        //[self Log:@&quot;succeed&quot;];
+    }
+}
+
+- (void)ShowFloatIcon:(bool)isShow
+{
+
+}
+
+- (NSString*)GetDeviceId
+{
+    return [[GHomeAPI sharedGHome] deviceId];
+}
+
+@end
+
+// NSString 转 CString
+char* MakeStringCopy(const char* string)
+{
+    if (string == NULL)
+        return NULL;
+
+    char* res = (char*)malloc(strlen(string) + 1);
+    strcpy(res, string);
+    return res;
+}
+
+#if defined(__cplusplus)  
+extern &quot;C&quot;{  
+#endif  
+    static MySDK *mySDK;
+    void _PlatformInit()  
+    {  
+        if(mySDK == NULL)  
+        {  
+            mySDK = [[MySDK alloc]init];  
+        }  
+        [mySDK SDKInit];  
+    }
+
+    void _PlatformLogin()  
+    {
+        [mySDK SDKLogin];  
+    }
+
+    void _PlatformLogout()  
+    {
+        [mySDK SDKLogout];  
+    }
+
+    void _PlatformDoExtend(const char *json)  
+    {
+        NSString *str1 = [NSString stringWithCString:json encoding:NSUTF8StringEncoding];
+        [mySDK DoExtend:str1];  
+    }
+
+    void _CopyTextToClipboard(const char *str) 
+    {
+        NSString *str1 = [NSString stringWithCString:str encoding:NSUTF8StringEncoding];
+        [mySDK CopyTextToClipboard:str1];  
+    }
+
+    void _SaveToAlbum(const char *base64Img, const char *name)
+    {
+        NSString *str1 = [NSString stringWithCString:base64Img encoding:NSUTF8StringEncoding];
+        NSString *str2 = [NSString stringWithCString:name encoding:NSUTF8StringEncoding];
+        [mySDK SaveToAlbum:str1 fileName:str2];
+    }
+
+    void _ShowFloatIcon(bool isShow)
+    {
+        [mySDK ShowFloatIcon:isShow];
+    }
+
+    const char* _GetDeviceId()
+    {
+        NSString *str = [mySDK GetDeviceId];
+        return MakeStringCopy([str UTF8String]);
+    }
+
+#if defined(__cplusplus)
+}
+#endif 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;这里注意 &lt;code class=&quot;highlighter-rouge&quot;&gt;NSString * const UNITY_SDK_OBJ = @&quot;SdkObj&quot;;&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;SdkObj&lt;/code&gt;为绑定交互类的 &lt;code class=&quot;highlighter-rouge&quot;&gt;gameObject&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;然后是Unity的部分：&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;using System.Collections;
+using System.IO;
+using UnityEngine;
+using LuaInterface;
+using System;
+using Oz.Framework;
+using System.Collections.Generic;
+using Oz.Framework.Utility;
+using System.Runtime.InteropServices;
+
+public class OzSDKManager : MonoBehaviour
+{
+    public static OzSDKManager Instance { get; set; }
+    public OzExtendData extendData = null;
+
+    [NoToLua]
+    private void Awake()
+    {
+        if(Instance == null)
+        {
+            Instance = this;
+        }
+    }
+
+    [NoToLua]
+    void Start () {
+        extendData = new OzExtendData();
+    }
+
+#if !UNITY_EDITOR &amp;amp;&amp;amp; UNITY_IPHONE
+    [DllImport (&quot;__Internal&quot;)]
+    private static extern void _PlatformInit();
+    [DllImport (&quot;__Internal&quot;)]
+    private static extern void _PlatformLogin();
+    [DllImport (&quot;__Internal&quot;)]
+    private static extern void _PlatformLogout();
+    [DllImport (&quot;__Internal&quot;)]
+    private static extern void _PlatformDoExtend(string json);
+    [DllImport (&quot;__Internal&quot;)]
+    private static extern void _CopyTextToClipboard(string str);
+    [DllImport (&quot;__Internal&quot;)]
+    private static extern void _SaveToAlbum(string base64Img, string fileName);
+    [DllImport (&quot;__Internal&quot;)]
+    private static extern void _ShowFloatIcon(bool isShow);
+    [DllImport (&quot;__Internal&quot;)]
+    [DllImport (&quot;__Internal&quot;)]
+    private static extern string _GetDeviceId();
+#elif !UNITY_EDITOR &amp;amp;&amp;amp; UNITY_ANDROID
+    // private AndroidJavaClass ajc_UnityPlayer = null;
+    // private AndroidJavaObject currentActivity = null;
+    private static AndroidJavaClass ajc_SDKCall = null;
+    private static void _PlatformInit()
+    {
+        ajc_SDKCall = new AndroidJavaClass(&quot;com.uainter.main.UAMain&quot;);
+        string json = &quot;{'channel':'0','debugmode':0,'appid':'xxxx','appkey':'xxx','islandscape':false}&quot;;
+        ajc_SDKCall.CallStatic(&quot;uaInit&quot;,json);
+    }
+    private static void _PlatformLogin()
+    {
+        string json = &quot;{}&quot;;
+        ajc_SDKCall.CallStatic(&quot;uaLogin&quot;,json);
+    }
+    private static void _PlatformLogout()
+    {
+        string json = &quot;{}&quot;;
+        ajc_SDKCall.CallStatic(&quot;uaLogout&quot;,json);
+    }
+    private static void _PlatformDoExtend(string json)
+    {
+        ajc_SDKCall.CallStatic(&quot;uaDoExtend&quot;,json);
+    }
+    private static void _CopyTextToClipboard(string str)
+    {
+        ajc_SDKCall.CallStatic(&quot;copyTextToClipboard&quot;, str);
+    }
+    private static void _SaveToAlbum(string base64Img, string fileName)
+    {
+        ajc_SDKCall.CallStatic(&quot;SaveToAlbum&quot;, base64Img, fileName, &quot;Lapis&quot;);
+    }
+    private static void _ShowFloatIcon(bool isShow)
+    {
+        string json = &quot;{'isShow':'&quot;+isShow+&quot;'}&quot;;
+        ajc_SDKCall.CallStatic(&quot;uaShowFloatIcon&quot;,json);
+    }
+    private static string _GetDeviceId()
+    {
+        return ajc_SDKCall.CallStatic&amp;lt;string&amp;gt;(&quot;GetDeviceId&quot;);
+    }
+#else
+    private static void _PlatformInit(){}
+    private static void _PlatformLogin(){}
+    private static void _PlatformLogout(){}
+    private static void _PlatformDoExtend(string json){}
+    private static void _CopyTextToClipboard(string str){}
+    private static void _SaveToAlbum(string base64Img, string fileName){}
+    private static void _ShowFloatIcon(bool isShow){}
+    private static string _GetDeviceId(){return &quot;&quot;;}
+#endif
+    
+    [NoToLua]
+    private Action&amp;lt;String&amp;gt; actionResult;
+
+    public void Init()
+    {
+        //建议在Debug版本中调用此接口打开日志功能，Release版本中注释掉；
+#if CONSOLE_ENABLE
+        GCrashReportInterface.ConfigDebugMode(true);
+#endif
+        //初始化Crash Handler；
+        GCrashReportInterface.InitCrashHandler();
+        //Debug版本建议调用此接口显示设置为不加密；
+#if CONSOLE_ENABLE
+        GCrashReportInterface.EnableEncryptLog(false);
+#endif
+        //
+        _PlatformInit();
+    }
+
+    public void LoginSDK(Action&amp;lt;String&amp;gt; _action)
+    {
+        actionResult = _action;
+        _PlatformLogin();
+    }
+
+    public void LoginOutSDK(Action&amp;lt;String&amp;gt; _action)
+    {
+        actionResult = _action;
+        _PlatformLogout();
+    }
+
+    public void DoExtend(int _type, int _sType)
+    {
+        string json = &quot;&quot;;
+        if (_type == 1) {
+            if (_sType == 1) {
+                extendData.submitType = &quot;createRole&quot;;
+            }else if (_sType == 2) {
+                extendData.submitType = &quot;selectServer&quot;;
+            }else if (_sType == 3) {
+                extendData.submitType = &quot;enterServer&quot;;
+            }else if (_sType == 4) {
+                extendData.submitType = &quot;levelUp&quot;;
+            }else if (_sType == 5) {
+                extendData.submitType = &quot;exitServer&quot;;
+            }
+            json = JsonUtility.ToJson(extendData);
+            LogUtil.Log(json);
+        } else {
+            json = &quot;{'commondId':'&quot;+_type+&quot;'}&quot;;
+        }
+        _PlatformDoExtend(json);
+    }
+
+    public void CopyTextToClipboard(string str)
+    {
+        _CopyTextToClipboard(str);
+    }
+
+    public void SaveToAlbum(Texture2D texture2D, string fileName)
+    {
+        byte[] bytes = texture2D.EncodeToJPG();
+        string base64Img = Convert.ToBase64String(bytes);
+        // DebugConsole.Log(base64Img.Length);
+        _SaveToAlbum(base64Img, fileName);
+    }
+    
+    // -- SDK CallBack --
+    [NoToLua]
+    void OnGameSdkCallback(string str)
+    {
+        print (&quot;OnGameSdkCallback str is &quot; + str);
+        // stringToEdit = str;
+        if (null != actionResult)
+        {
+            actionResult(str);
+            actionResult = null;
+        }
+    }
+
+    public void ShowFloatIcon(bool isShow)
+    {
+        _ShowFloatIcon(isShow);
+    }
+
+    public string GetDeviceId()
+    {
+        return _GetDeviceId();
+    }
+
+    [NoToLua]
+    void OnApplicationPause(bool isPause)
+    {
+        if (isPause) {
+            _OnApplicationPause();
+            DoExtend(2, 1);
+        }
+    }
+    
+    [NoToLua]
+    void OnApplicationFocus(bool isFocus)
+    {
+        if (isFocus)
+        {
+            _OnApplicationFocus();
+        }
+    }
+    
+    [NoToLua]
+    void OnApplicationQuit()
+    {
+        _OnApplicationQuit();
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>rockf91</name></author><summary type="html">Unity Xcode 导出工程的配置 使用PBXProject可以设置很多xcode的配置选项 using UnityEngine; using UnityEditor; using UnityEditor.Callbacks; using System.IO; #if UNITY_IOS &amp;amp;&amp;amp; UNITY_EDITOR using UnityEditor.iOS.Xcode; using UnityEditor.iOS.Xcode.Extensions; class BuildPostProcessor { // ios版本xcode工程维护代码 [PostProcessBuild] public static void OnPostprocessBuild(BuildTarget BuildTarget, string path) { if (BuildTarget == BuildTarget.iOS) { string projPath = PBXProject.GetPBXProjectPath(path); PBXProject proj = new PBXProject(); proj.ReadFromString(File.ReadAllText(projPath)); // 获取当前项目名字 string target = proj.TargetGuidByName(PBXProject.GetUnityTargetName()); // 对所有的编译配置设置选项 proj.SetBuildProperty(target, &quot;ENABLE_BITCODE&quot;, &quot;NO&quot;); proj.SetBuildProperty(target, &quot;ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES&quot;, &quot;YES&quot;); proj.AddBuildProperty(target, &quot;OTHER_LDFLAGS&quot;, &quot;-ObjC&quot;); // 添加依赖库 proj.AddFrameworkToProject (target, &quot;AdSupport.framework&quot;, false); proj.AddFrameworkToProject (target, &quot;CoreTelephony.framework&quot;, false); proj.AddFrameworkToProject (target, &quot;QuartzCore.framework&quot;, false); proj.AddFrameworkToProject (target, &quot;Security.framework&quot;, false); proj.AddFrameworkToProject (target, &quot;StoreKit.framework&quot;, false); proj.AddFrameworkToProject (target, &quot;SystemConfiguration.framework&quot;, false); proj.AddFrameworkToProject (target, &quot;libc++.tbd&quot;, false); proj.AddFrameworkToProject (target, &quot;libz.tbd&quot;, false); proj.AddFrameworkToProject (target, &quot;libsqlite3.0.tbd&quot;, false); proj.AddFrameworkToProject (target, &quot;libsqlite3.tbd&quot;, false); proj.AddFrameworkToProject (target, &quot;CoreFoundation.framework&quot;, false); proj.AddFrameworkToProject (target, &quot;CFNetwork.framework&quot;, false); proj.AddFrameworkToProject (target, &quot;CoreGraphics.framework&quot;, false); proj.AddFrameworkToProject (target, &quot;Foundation.framework&quot;, false); proj.AddFrameworkToProject (target, &quot;UIKit.framework&quot;, false); proj.AddFrameworkToProject (target, &quot;libresolv.tbd&quot;, false); proj.AddFrameworkToProject (target, &quot;UserNotifications.framework&quot;, false); // 设置签名 //proj.SetBuildProperty (target, &quot;CODE_SIGN_IDENTITY&quot;, &quot;iPhone Distribution: _______________&quot;); //proj.SetBuildProperty (target, &quot;PROVISIONING_PROFILE&quot;, &quot;********-****-****-****-************&quot;); const string defaultLocationInProj = &quot;Plugins/iOS&quot;; const string coreFrameworkName = &quot;xxx_sdk.framework&quot;; string framework = Path.Combine(defaultLocationInProj, coreFrameworkName); string fileGuid = proj.AddFile(framework, &quot;Frameworks/&quot; + framework, PBXSourceTree.Sdk); PBXProjectExtensions.AddFileToEmbedFrameworks(proj, target, fileGuid); // 保存工程 proj.WriteToFile (projPath); // 修改plist string plistPath = path + &quot;/Info.plist&quot;; PlistDocument plist = new PlistDocument(); plist.ReadFromString(File.ReadAllText(plistPath)); PlistElementDict rootDict = plist.root; // 语音所需要的声明，iOS10必须 rootDict.SetString(&quot;NSPhotoLibraryUsageDescription&quot;, &quot;是否允许此游戏使用系统相册？&quot;); rootDict.SetString(&quot;NSPhotoLibraryAddUsageDescription&quot;, &quot;是否允许此游戏使用系统相册附加功能？&quot;); rootDict.SetString(&quot;NSCameraUsageDescription&quot;, &quot;允许访问相机&quot;); //微信白名单 PlistElementArray array = rootDict.CreateArray(&quot;LSApplicationQueriesSchemes&quot;); array.AddString(&quot;weixin&quot;); //微信分享回调 PlistElementArray urlArray = rootDict.CreateArray(&quot;CFBundleURLTypes&quot;); PlistElementDict dic = urlArray.AddDict(); dic.SetString(&quot;CFBundleTypeRole&quot;, &quot;Editor&quot;); dic.SetString(&quot;CFBundleURLName&quot;, &quot;weixin&quot;); PlistElementArray dicArray = dic.CreateArray(&quot;CFBundleURLSchemes&quot;); dicArray.AddString(&quot;xxxxxxkeyxxxxxxx&quot;); PlistElementDict dictTmp = rootDict.CreateDict(&quot;NSAppTransportSecurity&quot;); dictTmp.SetBoolean( &quot;NSAllowsArbitraryLoads&quot;, true); // 保存plist plist.WriteToFile (plistPath); } } } #endif 添加sdk库文件 新建一个入口类 CustomAppController.mm 交互类 MySDK.h MySDK.mm。 全往这个工程目录 plugins/IOS/ 里扔。这个下面所有的代码和库资源会在打包时放入xcode工程的Libraries下面 Unity 添加自定义的入口和调用类 unity生成的xcode工程默认入口为 UnityAppController 。可以用自定义入口 CustomAppController.mm 替代这个类，并实现sdk需要添加的生命周期回调。 关键代码为调用 IMPL_APP_CONTROLLER_SUBCLASS（CustomAppController）。 这个宏的定义是这样的 #define IMPL_APP_CONTROLLER_SUBCLASS(ClassName) @interface ClassName(OverrideAppDelegate) { } +(void)load; @end @implementation ClassName(OverrideAppDelegate) +(void)load { extern const char* AppControllerClassName; AppControllerClassName = #ClassName; } @end 这里的代码使用了object-c的一些特性，其中扩展load这个函数的意思就是，在这个类被加载到内存时执行这个事情，它会自动把main里面的 AppControllerClassName改成你的。然后往生命周期函数的回调里添加sdk要求的函数。 完整代码 #import &quot;UnityAppController.h&quot; @interface CustomAppController : UnityAppController {} @end IMPL_APP_CONTROLLER_SUBCLASS (CustomAppController) @implementation CustomAppController // - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions { // // self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]]; // // self.window.backgroundColor = [UIColor whiteColor]; // // self.window.rootViewController = [[ViewController alloc] init]; // // [self.window makeKeyAndVisible]; // return YES; // } // - (void)applicationWillResignActive:(UIApplication *)application { // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state. // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game. // } - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary&amp;lt;UIApplicationOpenURLOptionsKey,id&amp;gt; *)options{ return YES; } - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation { return YES; } - (void)applicationDidEnterBackground:(UIApplication *)application { } - (void)applicationWillEnterForeground:(UIApplication *)application { } // - (void)applicationDidBecomeActive:(UIApplication *)application { // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface. // } // - (void)applicationWillTerminate:(UIApplication *)application { // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:. // } //关于屏幕旋转问题 在AppDelegate中加入该函数 //- (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(nullable UIWindow *)window { // //横屏游戏:UIInterfaceOrientationMaskLandscape 竖屏游戏:UIInterfaceOrientationMaskPortrait // return UIInterfaceOrientationMaskLandscape; //} @end Unity 和 Ios 交互 Ios的部分： MySDK.h #import &amp;lt;xxx_sdk/xxx_sdk.h&amp;gt; // Controller to support native rendering callback @interface DMSDK : NSObject&amp;lt; PlatformDelegate, PlatformPayDelegate&amp;gt; @end MySDK.mm #import &quot;DMSDK.h&quot; @implementation DMSDK NSString * const UNITY_SDK_OBJ = @&quot;SdkObj&quot;; - (void)SDKInit { [[GHomeAPI sharedGHome] initialize:self appId:@&quot;xxxxxxx11&quot;]; } #pragma mark - GHomeAPIInitializeDelegate - (void)initializeResult:(NSInteger)resultCode resultMsg:(NSString *)resultMsg{ // NSString * string = [NSString stringWithFormat:@&quot;resultCode:%ld,resultMsg:%@&quot;,(long)resultCode,resultMsg]; // [self appendLogInfo:string]; // if (resultCode == 0) { // self.loginBtn.enabled = true; // } } - (void)SDKLogin { [[GHomeAPI sharedGHome] login:self]; } #pragma mark - GHomeAPILoginDelegate - (void)loginResult:(NSInteger)resultCode resultMsg:(NSString *)resultMsg ticket:(NSString *)ticket userId:(NSString *)userId { NSString* string = @&quot;&quot;; // GHOMEAPI_CONSTANTS_SUCCESS // GHOMEAPI_CONSTANTS_CANCEL_LOGIN if (0 == resultCode) { string = [NSString stringWithFormat:@&quot;{\&quot;code\&quot;:1,\&quot;userid\&quot;:\&quot;%@\&quot;,\&quot;ticket\&quot;:\&quot;%@\&quot;,\&quot;callbackType\&quot;:\&quot;Login\&quot;}&quot;, userId, ticket]; UnitySendMessage([UNITY_SDK_OBJ UTF8String], &quot;OnGameSdkCallback&quot;, [string UTF8String]); } else { string = @&quot;{\&quot;code\&quot;:0,\&quot;callbackType\&quot;:\&quot;Login\&quot;}&quot;; UnitySendMessage([UNITY_SDK_OBJ UTF8String], &quot;OnGameSdkCallback&quot;, [string UTF8String]); } } - (void)SDKLogout { [[GHomeAPI sharedGHome] logout:self]; } - (void)logoutResult:(NSInteger)resultCode resultMsg:(NSString*)resultMsg { // showAlertView(@&quot;logoutResult code[%@] msg[%@]&quot;, @(resultCode), resultMsg); NSString* string = @&quot;&quot;; if (0 == resultCode) { string = @&quot;{\&quot;code\&quot;:1,\&quot;callbackType\&quot;:\&quot;LoginOut\&quot;}&quot;; UnitySendMessage([UNITY_SDK_OBJ UTF8String], &quot;OnGameSdkCallback&quot;, [string UTF8String]); } else { string = @&quot;{\&quot;code\&quot;:0,\&quot;callbackType\&quot;:\&quot;LoginOut\&quot;}&quot;; UnitySendMessage([UNITY_SDK_OBJ UTF8String], &quot;OnGameSdkCallback&quot;, [string UTF8String]); } } // 字典转json格式字符串： + (NSString*)dictionaryToJson:(NSDictionary *)dic { NSError *parseError = nil; NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:&amp;amp;parseError]; return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]; } /*! * @brief 把格式化的JSON格式的字符串转换成字典 * @param jsonString JSON格式的字符串 * @return 返回字典 */ + (NSDictionary *)dictionaryWithJsonString:(NSString *)jsonString { if (jsonString == nil) { return nil; } NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding]; NSError *err; NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingMutableContainers error:&amp;amp;err]; if(err) { NSLog(@&quot;json解析失败：%@&quot;,err); return nil; } return dic; } - (void)DoExtend:(NSString*)jsonString { NSDictionary *parameter = [DMSDK dictionaryWithJsonString:jsonString]; [[GHomeAPI sharedGHome] extendFunction:nil type: GHOME_REPORT_ROLE_INFO_TYPE parameter:parameter]; } - (void)CopyTextToClipboard:(NSString*)str { UIPasteboard *pasteboard = [UIPasteboard generalPasteboard]; pasteboard.string = str; } - (void)SaveToAlbum:(NSString*)base64Img fileName:(NSString*)name { NSData* data=[NSData alloc]; data = [data initWithBase64EncodedString:base64Img options:(NSDataBase64DecodingIgnoreUnknownCharacters)]; UIImage* img=[UIImage imageWithData:data]; UIImageWriteToSavedPhotosAlbum(img, self, @selector(image:didFinishSavingWithError:contextInfo:), nil); } - (void)image:(UIImage *)image didFinishSavingWithError:(NSError *)error contextInfo:(void *)contextInfo { if (error != NULL) { //[self Log:[error localizedDescription]]; } else { //[self Log:@&quot;succeed&quot;]; } } - (void)ShowFloatIcon:(bool)isShow { } - (NSString*)GetDeviceId { return [[GHomeAPI sharedGHome] deviceId]; } @end // NSString 转 CString char* MakeStringCopy(const char* string) { if (string == NULL) return NULL; char* res = (char*)malloc(strlen(string) + 1); strcpy(res, string); return res; } #if defined(__cplusplus) extern &quot;C&quot;{ #endif static MySDK *mySDK; void _PlatformInit() { if(mySDK == NULL) { mySDK = [[MySDK alloc]init]; } [mySDK SDKInit]; } void _PlatformLogin() { [mySDK SDKLogin]; } void _PlatformLogout() { [mySDK SDKLogout]; } void _PlatformDoExtend(const char *json) { NSString *str1 = [NSString stringWithCString:json encoding:NSUTF8StringEncoding]; [mySDK DoExtend:str1]; } void _CopyTextToClipboard(const char *str) { NSString *str1 = [NSString stringWithCString:str encoding:NSUTF8StringEncoding]; [mySDK CopyTextToClipboard:str1]; } void _SaveToAlbum(const char *base64Img, const char *name) { NSString *str1 = [NSString stringWithCString:base64Img encoding:NSUTF8StringEncoding]; NSString *str2 = [NSString stringWithCString:name encoding:NSUTF8StringEncoding]; [mySDK SaveToAlbum:str1 fileName:str2]; } void _ShowFloatIcon(bool isShow) { [mySDK ShowFloatIcon:isShow]; } const char* _GetDeviceId() { NSString *str = [mySDK GetDeviceId]; return MakeStringCopy([str UTF8String]); } #if defined(__cplusplus) } #endif 这里注意 NSString * const UNITY_SDK_OBJ = @&quot;SdkObj&quot;; SdkObj为绑定交互类的 gameObject 然后是Unity的部分： using System.Collections; using System.IO; using UnityEngine; using LuaInterface; using System; using Oz.Framework; using System.Collections.Generic; using Oz.Framework.Utility; using System.Runtime.InteropServices; public class OzSDKManager : MonoBehaviour { public static OzSDKManager Instance { get; set; } public OzExtendData extendData = null; [NoToLua] private void Awake() { if(Instance == null) { Instance = this; } } [NoToLua] void Start () { extendData = new OzExtendData(); } #if !UNITY_EDITOR &amp;amp;&amp;amp; UNITY_IPHONE [DllImport (&quot;__Internal&quot;)] private static extern void _PlatformInit(); [DllImport (&quot;__Internal&quot;)] private static extern void _PlatformLogin(); [DllImport (&quot;__Internal&quot;)] private static extern void _PlatformLogout(); [DllImport (&quot;__Internal&quot;)] private static extern void _PlatformDoExtend(string json); [DllImport (&quot;__Internal&quot;)] private static extern void _CopyTextToClipboard(string str); [DllImport (&quot;__Internal&quot;)] private static extern void _SaveToAlbum(string base64Img, string fileName); [DllImport (&quot;__Internal&quot;)] private static extern void _ShowFloatIcon(bool isShow); [DllImport (&quot;__Internal&quot;)] [DllImport (&quot;__Internal&quot;)] private static extern string _GetDeviceId(); #elif !UNITY_EDITOR &amp;amp;&amp;amp; UNITY_ANDROID // private AndroidJavaClass ajc_UnityPlayer = null; // private AndroidJavaObject currentActivity = null; private static AndroidJavaClass ajc_SDKCall = null; private static void _PlatformInit() { ajc_SDKCall = new AndroidJavaClass(&quot;com.uainter.main.UAMain&quot;); string json = &quot;{'channel':'0','debugmode':0,'appid':'xxxx','appkey':'xxx','islandscape':false}&quot;; ajc_SDKCall.CallStatic(&quot;uaInit&quot;,json); } private static void _PlatformLogin() { string json = &quot;{}&quot;; ajc_SDKCall.CallStatic(&quot;uaLogin&quot;,json); } private static void _PlatformLogout() { string json = &quot;{}&quot;; ajc_SDKCall.CallStatic(&quot;uaLogout&quot;,json); } private static void _PlatformDoExtend(string json) { ajc_SDKCall.CallStatic(&quot;uaDoExtend&quot;,json); } private static void _CopyTextToClipboard(string str) { ajc_SDKCall.CallStatic(&quot;copyTextToClipboard&quot;, str); } private static void _SaveToAlbum(string base64Img, string fileName) { ajc_SDKCall.CallStatic(&quot;SaveToAlbum&quot;, base64Img, fileName, &quot;Lapis&quot;); } private static void _ShowFloatIcon(bool isShow) { string json = &quot;{'isShow':'&quot;+isShow+&quot;'}&quot;; ajc_SDKCall.CallStatic(&quot;uaShowFloatIcon&quot;,json); } private static string _GetDeviceId() { return ajc_SDKCall.CallStatic&amp;lt;string&amp;gt;(&quot;GetDeviceId&quot;); } #else private static void _PlatformInit(){} private static void _PlatformLogin(){} private static void _PlatformLogout(){} private static void _PlatformDoExtend(string json){} private static void _CopyTextToClipboard(string str){} private static void _SaveToAlbum(string base64Img, string fileName){} private static void _ShowFloatIcon(bool isShow){} private static string _GetDeviceId(){return &quot;&quot;;} #endif [NoToLua] private Action&amp;lt;String&amp;gt; actionResult; public void Init() { //建议在Debug版本中调用此接口打开日志功能，Release版本中注释掉； #if CONSOLE_ENABLE GCrashReportInterface.ConfigDebugMode(true); #endif //初始化Crash Handler； GCrashReportInterface.InitCrashHandler(); //Debug版本建议调用此接口显示设置为不加密； #if CONSOLE_ENABLE GCrashReportInterface.EnableEncryptLog(false); #endif // _PlatformInit(); } public void LoginSDK(Action&amp;lt;String&amp;gt; _action) { actionResult = _action; _PlatformLogin(); } public void LoginOutSDK(Action&amp;lt;String&amp;gt; _action) { actionResult = _action; _PlatformLogout(); } public void DoExtend(int _type, int _sType) { string json = &quot;&quot;; if (_type == 1) { if (_sType == 1) { extendData.submitType = &quot;createRole&quot;; }else if (_sType == 2) { extendData.submitType = &quot;selectServer&quot;; }else if (_sType == 3) { extendData.submitType = &quot;enterServer&quot;; }else if (_sType == 4) { extendData.submitType = &quot;levelUp&quot;; }else if (_sType == 5) { extendData.submitType = &quot;exitServer&quot;; } json = JsonUtility.ToJson(extendData); LogUtil.Log(json); } else { json = &quot;{'commondId':'&quot;+_type+&quot;'}&quot;; } _PlatformDoExtend(json); } public void CopyTextToClipboard(string str) { _CopyTextToClipboard(str); } public void SaveToAlbum(Texture2D texture2D, string fileName) { byte[] bytes = texture2D.EncodeToJPG(); string base64Img = Convert.ToBase64String(bytes); // DebugConsole.Log(base64Img.Length); _SaveToAlbum(base64Img, fileName); } // -- SDK CallBack -- [NoToLua] void OnGameSdkCallback(string str) { print (&quot;OnGameSdkCallback str is &quot; + str); // stringToEdit = str; if (null != actionResult) { actionResult(str); actionResult = null; } } public void ShowFloatIcon(bool isShow) { _ShowFloatIcon(isShow); } public string GetDeviceId() { return _GetDeviceId(); } [NoToLua] void OnApplicationPause(bool isPause) { if (isPause) { _OnApplicationPause(); DoExtend(2, 1); } } [NoToLua] void OnApplicationFocus(bool isFocus) { if (isFocus) { _OnApplicationFocus(); } } [NoToLua] void OnApplicationQuit() { _OnApplicationQuit(); } }</summary></entry><entry><title type="html">如何使用gpi-case搭建pico-8平台</title><link href="https://rockf91.github.io/2019/11/14/gpi-case/" rel="alternate" type="text/html" title="如何使用gpi-case搭建pico-8平台" /><published>2019-11-14T00:21:38+08:00</published><updated>2019-11-14T00:21:38+08:00</updated><id>https://rockf91.github.io/2019/11/14/gpi-case</id><content type="html" xml:base="https://rockf91.github.io/2019/11/14/gpi-case/">&lt;p&gt;完整说明一下，组合树莓派，然后安装系统到调试，使用的过程。
+&lt;!-- more --&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;准备工作&quot;&gt;准备工作&lt;/h2&gt;
+
+&lt;p&gt;需要的硬件清单&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;￥399   Retroflag GPi CASE 复古旗GPi套件&lt;/li&gt;
+  &lt;li&gt;￥80    Raspberry Pi Zero W 树莓派ZeroW&lt;/li&gt;
+  &lt;li&gt;￥30    MicroSD 卡, 32G&lt;/li&gt;
+  &lt;li&gt;￥10    MicroSD 卡读卡器&lt;/li&gt;
+  &lt;li&gt;￥3     AA 5号电池三节（可选）&lt;/li&gt;
+  &lt;li&gt;￥0     PC/MAC 电脑一台&lt;/li&gt;
+  &lt;li&gt;￥25    USB Wifi(PC和wifi不在一个网段时需要)
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;注意树莓派不要买错，买成WH，WH多了个头，装不进去的
+电池建议买充电电池，不嫌重的话，充电宝也可以
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;需要的软件清单&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/RetroPie/RetroPie-Setup/releases/download/4.5.1/retropie-4.5.1-rpi1_zero.img.gz&quot;&gt;retropi系统镜像&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://download.retroflag.com/Products/GPi_Case/GPi_Case_patch.zip&quot;&gt;gpi case补丁&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/RetroFlag/retroflag-picase/archive/master.zip&quot;&gt;gpi case安全关机脚本&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/pbatard/rufus/releases/download/v3.8/rufus-3.8.exe&quot;&gt;sd卡格式化工具 rufus3.8&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://sourceforge.net/projects/win32diskimager/files/latest/download&quot;&gt;烧录镜像工具 win32diskimager&lt;/a&gt; &lt;a href=&quot;https://www.balena.io/etcher/&quot;&gt;或者etcher&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://the.earth.li/~sgtatham/putty/latest/w32/putty-0.73-installer.msi&quot;&gt;ssh工具putty 32位&lt;/a&gt; &lt;a href=&quot;https://the.earth.li/~sgtatham/putty/latest/w64/putty-64bit-0.73-installer.msi&quot;&gt;或者64位版本&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://download.filezilla-project.org/client/FileZilla_3.45.1_win64_sponsored-setup.exe&quot;&gt;ftp上传工具 filezilla&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.lexaloffle.com/pico-8.php&quot;&gt;pico-8树莓派版本&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.libsdl.org/download-2.0.php&quot;&gt;SDL&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;开始组装硬件&quot;&gt;开始组装硬件&lt;/h2&gt;
+
+&lt;p&gt;套件内有图示说明，照着拼装就没太大问题&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://download.retroflag.com/manual/case/GPi_CASE_Manual.pdf&quot;&gt;GPi CASE组合图例&lt;/a&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;关闭电源开关，取下卡带&lt;/li&gt;
+  &lt;li&gt;打开卡带，小心sd卡封套别掉了，取出 IO转换版&lt;/li&gt;
+  &lt;li&gt;组合一下自带的螺丝刀，往壳上拧上四个螺母&lt;/li&gt;
+  &lt;li&gt;连接 树莓派 和 IO转换板（先不要急着上螺丝，这一步我拧爆一个螺母。。。）&lt;/li&gt;
+  &lt;li&gt;装上sd卡封套，合上外壳，最后拧好4个螺丝&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;开始安装软件&quot;&gt;开始安装软件&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;格式化sd卡
+    &lt;ul&gt;
+      &lt;li&gt;32G或更小的，选 FAT 格式，64G或更大的，选 ExFAT 格式&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;使用烧录工具，把retropi镜像烧入sd卡&lt;/li&gt;
+  &lt;li&gt;安装gpi case补丁
+    &lt;ul&gt;
+      &lt;li&gt;解压 &lt;code class=&quot;highlighter-rouge&quot;&gt;GPi_Case_patch&lt;/code&gt; 然后将整个目录文件放到sd卡的根目录下&lt;/li&gt;
+      &lt;li&gt;进入sd卡上的 &lt;code class=&quot;highlighter-rouge&quot;&gt;GPi_Case_patch&lt;/code&gt; 目录，双击 &lt;code class=&quot;highlighter-rouge&quot;&gt;install_patch.bat&lt;/code&gt; 运行&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;设置wifi
+    &lt;ul&gt;
+      &lt;li&gt;在sd卡根目录新建 &lt;code class=&quot;highlighter-rouge&quot;&gt;wpa_supplicant.conf&lt;/code&gt; 文件，按照下面的参考格式填入内容并保存
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;country=CN
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+   
+network={
+ssid=&quot;WiFi-A&quot;
+psk=&quot;12345678&quot;
+key_mgmt=WPA-PSK
+priority=1
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#ssid:网络的ssid
+#psk:密码
+#priority:连接优先级，数字越大优先级越高（不可以是负数）
+#scan_ssid:连接隐藏WiFi时需要指定该值为1
+  
+如果你的 WiFi 没有密码
+network={
+ssid=&quot;你的无线网络名称（ssid）&quot;
+key_mgmt=NONE
+}
+      
+如果你的 WiFi 使用WEP加密
+network={
+ssid=&quot;你的无线网络名称（ssid）&quot;
+key_mgmt=NONE
+wep_key0=&quot;你的wifi密码&quot;
+}
+      
+如果你的 WiFi 使用WPA/WPA2加密
+network={
+ssid=&quot;你的无线网络名称（ssid）&quot;
+key_mgmt=WPA-PSK
+psk=&quot;你的wifi密码&quot;
+}
+      
+如果你不清楚 WiFi 的加密模式，可以在安卓手机上用 root explorer 打开 /data/misc/wifi/wpa/       wpa_supplicant.conf，查看 WiFi 的信息。
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+      &lt;li&gt;每次启动后 &lt;code class=&quot;highlighter-rouge&quot;&gt;wpa_supplicant.conf&lt;/code&gt; 这个文件会消失，有改动的话需重新添加&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;开启ssh服务
+    &lt;ul&gt;
+      &lt;li&gt;在sd卡根目录新建一个空白文件，命名为 &lt;code class=&quot;highlighter-rouge&quot;&gt;ssh&lt;/code&gt;。注意要小写且不要有任何扩展名。&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;远程连接系统IP
+    &lt;ul&gt;
+      &lt;li&gt;sd卡插好，打开电池仓，中间有个安全关机开关设置到 &lt;code class=&quot;highlighter-rouge&quot;&gt;On&lt;/code&gt; ，开机&lt;/li&gt;
+      &lt;li&gt;等待开机后，选retropie进入设置界面，找到 &lt;code class=&quot;highlighter-rouge&quot;&gt;SHOW IP&lt;/code&gt; 选项进入，记下 IP 地址&lt;/li&gt;
+      &lt;li&gt;pc 打开putty ssh远程连接树莓派，这里注意pc需要和wifi在同一个网段
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Host Name 这里填 pi@xxx.xxx.xx.xxx (刚才看到的IP地址)
+端口 22
+默认密码 raspberry
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+      &lt;li&gt;ftp 也连接一下 方便传文件，打开 ftp 连接工具
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;主机名填 xxx.xxx.xx.xxx (刚才看到的IP地址)
+用户名 pi
+端口 22
+默认密码 raspberry
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;配置Gpi case按键
+    &lt;ul&gt;
+      &lt;li&gt;第一次开机需要设置按键，按住任意按键不放就可以开始配置&lt;/li&gt;
+      &lt;li&gt;然后根据提示，一个个按键设置下去&lt;/li&gt;
+      &lt;li&gt;Left/Right shoulder 左右肩键在背后有三个凸点的地方&lt;/li&gt;
+      &lt;li&gt;剩余没有的按键可以按住任意键不放跳过&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;安装安全关机脚本
+    &lt;ul&gt;
+      &lt;li&gt;在putty打开的ssh窗口中输入
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;wget -O - &quot;https://raw.githubusercontent.com/RetroFlag/retroflag-picase/master/  install_gpi.sh&quot; | sudo bash
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+        &lt;p&gt;等几分钟，完成后会自动重启&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;扩展文件系统
+    &lt;ul&gt;
+      &lt;li&gt;等待开机后，选retropie进入设置界面&lt;/li&gt;
+      &lt;li&gt;选择 &lt;code class=&quot;highlighter-rouge&quot;&gt;raspi-config&lt;/code&gt; 选项进入&lt;/li&gt;
+      &lt;li&gt;然后选 &lt;code class=&quot;highlighter-rouge&quot;&gt;Advanced Configuration&lt;/code&gt;， 然后 &lt;code class=&quot;highlighter-rouge&quot;&gt;expand_rootfs&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;选 &lt;code class=&quot;highlighter-rouge&quot;&gt;Finish&lt;/code&gt; 然后 确认 &lt;code class=&quot;highlighter-rouge&quot;&gt;reboot&lt;/code&gt; 重启&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;拷贝rom游戏
+    &lt;ul&gt;
+      &lt;li&gt;网络邻居或者资源管理器路径输入 &lt;code class=&quot;highlighter-rouge&quot;&gt;\\RETROPIE&lt;/code&gt; 找到 &lt;code class=&quot;highlighter-rouge&quot;&gt;roms&lt;/code&gt; 文件夹拷入对应平台的游戏即可&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;配置pico8&quot;&gt;配置pico8&lt;/h2&gt;
+&lt;ol&gt;
+  &lt;li&gt;解压 pico-8树莓派版本
+    &lt;ul&gt;
+      &lt;li&gt;ftp 打开目录 &lt;code class=&quot;highlighter-rouge&quot;&gt;/home/pi/pico-8&lt;/code&gt; 将 &lt;code class=&quot;highlighter-rouge&quot;&gt;pico-8&lt;/code&gt; 目录的文件拷入&lt;/li&gt;
+      &lt;li&gt;新建一个文件 &lt;code class=&quot;highlighter-rouge&quot;&gt;Start PICO-8.sh&lt;/code&gt; 拷贝到 &lt;code class=&quot;highlighter-rouge&quot;&gt;/home/pi/pico-8&lt;/code&gt;&lt;/li&gt;
+      &lt;li&gt;ssh窗口中输入 &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo apt-get install wiringpi&lt;/code&gt; 安装 &lt;a href=&quot;http://wiringpi.com/&quot;&gt;wiringPI&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;解压 SDL 到 &lt;code class=&quot;highlighter-rouge&quot;&gt;/home/pi/pico-8&lt;/code&gt; 目录，变成差不多这样的目录结构 &lt;code class=&quot;highlighter-rouge&quot;&gt;/home/pi/pico-8/SDL2-2.0.10&lt;/code&gt;
+    &lt;ul&gt;
+      &lt;li&gt;ssh窗口输入以下命令配置
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; cd /home/pi/pico-8/SDL2-2.0.10/test
+ sudo chmod 777 configure
+ ./configure
+ make controllermap
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+      &lt;li&gt;继续输入 &lt;code class=&quot;highlighter-rouge&quot;&gt;./controllermap 0 &amp;gt;&amp;gt; /home/pi/pico-8/sdl_controllers.txt&lt;/code&gt; GPI屏幕上会显示手柄配置
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;按照提示依次输入对应按键
+没有的按键 按下B 跳过
+需要设置 B, A, Y, X, 十字键, L/R 肩键, start 和 select
+完成后会生成 sdl_controllers.txt 在 /home/pi/pico-8/ 目录下
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;配置 在线游玩模式的 pico-8
+    &lt;ul&gt;
+      &lt;li&gt;ftp或者ssh 打开 &lt;code class=&quot;highlighter-rouge&quot;&gt;/opt/retropie/configs/all/emulationstation/es_systems.cfg&lt;/code&gt; 或者 &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/emulationstation/es_systems.cfg&lt;/code&gt; 这里可以先备份一下，万一改错了就进不去了&lt;/li&gt;
+      &lt;li&gt;找到同样的 &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;system&amp;gt;&amp;lt;/system&amp;gt;&lt;/code&gt; 结构 加入以下配置
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; &amp;lt;system&amp;gt;
+ &amp;lt;name&amp;gt;pico8&amp;lt;/name&amp;gt;
+ &amp;lt;fullname&amp;gt;PICO-8&amp;lt;/fullname&amp;gt;
+ &amp;lt;path&amp;gt;/home/pi/pico-8&amp;lt;/path&amp;gt;
+ &amp;lt;extension&amp;gt;.sh .SH&amp;lt;/extension&amp;gt;
+ &amp;lt;command&amp;gt;/opt/retropie/supplementary/runcommand/runcommand.sh 0 &quot;/home/pi/pico-8/pico8 -splore&quot;&amp;lt;/command&amp;gt;
+ &amp;lt;platform&amp;gt;pico8&amp;lt;/platform&amp;gt;
+ &amp;lt;theme&amp;gt;pico8&amp;lt;/theme&amp;gt;
+ &amp;lt;/system&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+      &lt;li&gt;(ftp操作) 先修改文件读写权限，然后就可以直接修改文件后保存&lt;/li&gt;
+      &lt;li&gt;(ssh操作) 按 &lt;code class=&quot;highlighter-rouge&quot;&gt;ctrl+x&lt;/code&gt; 然后 &lt;code class=&quot;highlighter-rouge&quot;&gt;y&lt;/code&gt; 保存退出&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;配置 读取 rom 的 pico-8
+    &lt;ul&gt;
+      &lt;li&gt;同样文件下加入以下配置
+        &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;system&amp;gt;
+&amp;lt;name&amp;gt;pico8ctm&amp;lt;/name&amp;gt;
+&amp;lt;fullname&amp;gt;PICO-8&amp;lt;/fullname&amp;gt;
+&amp;lt;path&amp;gt;/home/pi/RetroPie/roms/pico-8&amp;lt;/path&amp;gt;
+&amp;lt;extension&amp;gt;.p8&amp;lt;/extension&amp;gt;
+&amp;lt;command&amp;gt;/opt/retropie/supplementary/runcommand/runcommand.sh 0 &quot;/home/pi/pico8/pico8   -run %ROM%&quot;&amp;lt;/command&amp;gt;
+&amp;lt;platform&amp;gt;pico8&amp;lt;/platform&amp;gt;
+&amp;lt;theme&amp;gt;pico8&amp;lt;/theme&amp;gt;
+&amp;lt;/system&amp;gt; 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;        &lt;/div&gt;
+      &lt;/li&gt;
+      &lt;li&gt;ssh操作 输入 &lt;code class=&quot;highlighter-rouge&quot;&gt;shutdown -r now&lt;/code&gt; 重启&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;帧率限制调整
+    &lt;ul&gt;
+      &lt;li&gt;pico8的 &lt;code class=&quot;highlighter-rouge&quot;&gt;_update60&lt;/code&gt; 是不限帧的，所以需要调整一下硬件限制
+&lt;code class=&quot;highlighter-rouge&quot;&gt;~/.lexaloffle/pico-8/config.txt&lt;/code&gt;  找到 &lt;code class=&quot;highlighter-rouge&quot;&gt;foreground_sleep_ms&lt;/code&gt; 改成 &lt;code class=&quot;highlighter-rouge&quot;&gt;5&lt;/code&gt; 左右基本上就不会突然帧率增加了。&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;到这里就差不多完成了，之后可以拷贝整个sd目录文件做个备份&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;最后，感谢阅读，希望这篇指导可以帮助到您~&lt;/p&gt;
+
+&lt;p&gt;参考文章：&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;http://shumeipai.nxez.com/2017/09/13/raspberry-pi-network-configuration-before-boot.html&lt;/li&gt;
+  &lt;li&gt;https://sinisterspatula.github.io/RetroflagGpiGuides/pico8/pico8&lt;/li&gt;
+  &lt;li&gt;https://www.lexaloffle.com/bbs/?tid=3935&lt;/li&gt;
+  &lt;li&gt;https://howchoo.com/g/ndc3njbhytv/retroflag-gpi-setup#configure-the-controller&lt;/li&gt;
+&lt;/ul&gt;</content><author><name>rockf91</name></author><summary type="html">完整说明一下，组合树莓派，然后安装系统到调试，使用的过程。 准备工作 需要的硬件清单 ￥399 Retroflag GPi CASE 复古旗GPi套件 ￥80 Raspberry Pi Zero W 树莓派ZeroW ￥30 MicroSD 卡, 32G ￥10 MicroSD 卡读卡器 ￥3 AA 5号电池三节（可选） ￥0 PC/MAC 电脑一台 ￥25 USB Wifi(PC和wifi不在一个网段时需要) 注意树莓派不要买错，买成WH，WH多了个头，装不进去的 电池建议买充电电池，不嫌重的话，充电宝也可以 需要的软件清单 retropi系统镜像 gpi case补丁 gpi case安全关机脚本 sd卡格式化工具 rufus3.8 烧录镜像工具 win32diskimager 或者etcher ssh工具putty 32位 或者64位版本 ftp上传工具 filezilla pico-8树莓派版本 SDL 开始组装硬件 套件内有图示说明，照着拼装就没太大问题 GPi CASE组合图例 关闭电源开关，取下卡带 打开卡带，小心sd卡封套别掉了，取出 IO转换版 组合一下自带的螺丝刀，往壳上拧上四个螺母 连接 树莓派 和 IO转换板（先不要急着上螺丝，这一步我拧爆一个螺母。。。） 装上sd卡封套，合上外壳，最后拧好4个螺丝 开始安装软件 格式化sd卡 32G或更小的，选 FAT 格式，64G或更大的，选 ExFAT 格式 使用烧录工具，把retropi镜像烧入sd卡 安装gpi case补丁 解压 GPi_Case_patch 然后将整个目录文件放到sd卡的根目录下 进入sd卡上的 GPi_Case_patch 目录，双击 install_patch.bat 运行 设置wifi 在sd卡根目录新建 wpa_supplicant.conf 文件，按照下面的参考格式填入内容并保存 country=CN ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev update_config=1 network={ ssid=&quot;WiFi-A&quot; psk=&quot;12345678&quot; key_mgmt=WPA-PSK priority=1 } #ssid:网络的ssid #psk:密码 #priority:连接优先级，数字越大优先级越高（不可以是负数） #scan_ssid:连接隐藏WiFi时需要指定该值为1 如果你的 WiFi 没有密码 network={ ssid=&quot;你的无线网络名称（ssid）&quot; key_mgmt=NONE } 如果你的 WiFi 使用WEP加密 network={ ssid=&quot;你的无线网络名称（ssid）&quot; key_mgmt=NONE wep_key0=&quot;你的wifi密码&quot; } 如果你的 WiFi 使用WPA/WPA2加密 network={ ssid=&quot;你的无线网络名称（ssid）&quot; key_mgmt=WPA-PSK psk=&quot;你的wifi密码&quot; } 如果你不清楚 WiFi 的加密模式，可以在安卓手机上用 root explorer 打开 /data/misc/wifi/wpa/ wpa_supplicant.conf，查看 WiFi 的信息。 每次启动后 wpa_supplicant.conf 这个文件会消失，有改动的话需重新添加 开启ssh服务 在sd卡根目录新建一个空白文件，命名为 ssh。注意要小写且不要有任何扩展名。 远程连接系统IP sd卡插好，打开电池仓，中间有个安全关机开关设置到 On ，开机 等待开机后，选retropie进入设置界面，找到 SHOW IP 选项进入，记下 IP 地址 pc 打开putty ssh远程连接树莓派，这里注意pc需要和wifi在同一个网段 Host Name 这里填 pi@xxx.xxx.xx.xxx (刚才看到的IP地址) 端口 22 默认密码 raspberry ftp 也连接一下 方便传文件，打开 ftp 连接工具 主机名填 xxx.xxx.xx.xxx (刚才看到的IP地址) 用户名 pi 端口 22 默认密码 raspberry 配置Gpi case按键 第一次开机需要设置按键，按住任意按键不放就可以开始配置 然后根据提示，一个个按键设置下去 Left/Right shoulder 左右肩键在背后有三个凸点的地方 剩余没有的按键可以按住任意键不放跳过 安装安全关机脚本 在putty打开的ssh窗口中输入 wget -O - &quot;https://raw.githubusercontent.com/RetroFlag/retroflag-picase/master/ install_gpi.sh&quot; | sudo bash 等几分钟，完成后会自动重启 扩展文件系统 等待开机后，选retropie进入设置界面 选择 raspi-config 选项进入 然后选 Advanced Configuration， 然后 expand_rootfs 选 Finish 然后 确认 reboot 重启 拷贝rom游戏 网络邻居或者资源管理器路径输入 \\RETROPIE 找到 roms 文件夹拷入对应平台的游戏即可 配置pico8 解压 pico-8树莓派版本 ftp 打开目录 /home/pi/pico-8 将 pico-8 目录的文件拷入 新建一个文件 Start PICO-8.sh 拷贝到 /home/pi/pico-8 ssh窗口中输入 sudo apt-get install wiringpi 安装 wiringPI 解压 SDL 到 /home/pi/pico-8 目录，变成差不多这样的目录结构 /home/pi/pico-8/SDL2-2.0.10 ssh窗口输入以下命令配置 cd /home/pi/pico-8/SDL2-2.0.10/test sudo chmod 777 configure ./configure make controllermap 继续输入 ./controllermap 0 &amp;gt;&amp;gt; /home/pi/pico-8/sdl_controllers.txt GPI屏幕上会显示手柄配置 按照提示依次输入对应按键 没有的按键 按下B 跳过 需要设置 B, A, Y, X, 十字键, L/R 肩键, start 和 select 完成后会生成 sdl_controllers.txt 在 /home/pi/pico-8/ 目录下 配置 在线游玩模式的 pico-8 ftp或者ssh 打开 /opt/retropie/configs/all/emulationstation/es_systems.cfg 或者 /etc/emulationstation/es_systems.cfg 这里可以先备份一下，万一改错了就进不去了 找到同样的 &amp;lt;system&amp;gt;&amp;lt;/system&amp;gt; 结构 加入以下配置 &amp;lt;system&amp;gt; &amp;lt;name&amp;gt;pico8&amp;lt;/name&amp;gt; &amp;lt;fullname&amp;gt;PICO-8&amp;lt;/fullname&amp;gt; &amp;lt;path&amp;gt;/home/pi/pico-8&amp;lt;/path&amp;gt; &amp;lt;extension&amp;gt;.sh .SH&amp;lt;/extension&amp;gt; &amp;lt;command&amp;gt;/opt/retropie/supplementary/runcommand/runcommand.sh 0 &quot;/home/pi/pico-8/pico8 -splore&quot;&amp;lt;/command&amp;gt; &amp;lt;platform&amp;gt;pico8&amp;lt;/platform&amp;gt; &amp;lt;theme&amp;gt;pico8&amp;lt;/theme&amp;gt; &amp;lt;/system&amp;gt; (ftp操作) 先修改文件读写权限，然后就可以直接修改文件后保存 (ssh操作) 按 ctrl+x 然后 y 保存退出 配置 读取 rom 的 pico-8 同样文件下加入以下配置 &amp;lt;system&amp;gt; &amp;lt;name&amp;gt;pico8ctm&amp;lt;/name&amp;gt; &amp;lt;fullname&amp;gt;PICO-8&amp;lt;/fullname&amp;gt; &amp;lt;path&amp;gt;/home/pi/RetroPie/roms/pico-8&amp;lt;/path&amp;gt; &amp;lt;extension&amp;gt;.p8&amp;lt;/extension&amp;gt; &amp;lt;command&amp;gt;/opt/retropie/supplementary/runcommand/runcommand.sh 0 &quot;/home/pi/pico8/pico8 -run %ROM%&quot;&amp;lt;/command&amp;gt; &amp;lt;platform&amp;gt;pico8&amp;lt;/platform&amp;gt; &amp;lt;theme&amp;gt;pico8&amp;lt;/theme&amp;gt; &amp;lt;/system&amp;gt; ssh操作 输入 shutdown -r now 重启 帧率限制调整 pico8的 _update60 是不限帧的，所以需要调整一下硬件限制 ~/.lexaloffle/pico-8/config.txt 找到 foreground_sleep_ms 改成 5 左右基本上就不会突然帧率增加了。 到这里就差不多完成了，之后可以拷贝整个sd目录文件做个备份 最后，感谢阅读，希望这篇指导可以帮助到您~ 参考文章： http://shumeipai.nxez.com/2017/09/13/raspberry-pi-network-configuration-before-boot.html https://sinisterspatula.github.io/RetroflagGpiGuides/pico8/pico8 https://www.lexaloffle.com/bbs/?tid=3935 https://howchoo.com/g/ndc3njbhytv/retroflag-gpi-setup#configure-the-controller</summary></entry><entry><title type="html">unity对接AndroidSDK</title><link href="https://rockf91.github.io/2019/09/25/unitsdk/" rel="alternate" type="text/html" title="unity对接AndroidSDK" /><published>2019-09-25T00:21:38+08:00</published><updated>2019-09-25T00:21:38+08:00</updated><id>https://rockf91.github.io/2019/09/25/unitsdk</id><content type="html" xml:base="https://rockf91.github.io/2019/09/25/unitsdk/">&lt;!-- more --&gt;
+&lt;h2 id=&quot;在纯净的eclipse中安装adt插件&quot;&gt;在纯净的eclipse中安装adt插件&lt;/h2&gt;
+
+&lt;p&gt;先 &lt;code class=&quot;highlighter-rouge&quot;&gt;ping dl.google.com&lt;/code&gt; 获取 &lt;code class=&quot;highlighter-rouge&quot;&gt;ip地址&lt;/code&gt; 
+打开 &lt;code class=&quot;highlighter-rouge&quot;&gt;C:\Windows\System32\drivers\etc\hosts&lt;/code&gt; 文件，加上一行：&lt;code class=&quot;highlighter-rouge&quot;&gt;ip地址 dl.google.com&lt;/code&gt;&lt;br /&gt;
+例如 &lt;code class=&quot;highlighter-rouge&quot;&gt;203.208.40.36 dl.google.com&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;在eclipse的help菜单中选择install new software，点击add，地址为adt -： &lt;code class=&quot;highlighter-rouge&quot;&gt;http://dl.google.com/android/eclipse/&lt;/code&gt;，展开节点，全选developer tools。去掉contact all update sites during install to find required software,点击下一步，点击完成即可下载。&lt;/p&gt;
+
+&lt;h2 id=&quot;eclipse-配置&quot;&gt;Eclipse 配置&lt;/h2&gt;
+&lt;p&gt;Eclipse在创建项目时应该参照jdk目录下的jre路径，有了这个jre之后，有时候会干扰。所以我们指明一下就可以了：
+1.进入window——preference——java——installed jres
+2.点击add——standard vm——jre home指明到的你的jdk路径&lt;/p&gt;
+
+&lt;h2 id=&quot;unity-配置&quot;&gt;Unity 配置&lt;/h2&gt;
+&lt;p&gt;unity中classes.jar文件路径：点击unity图标右键选择属性-&amp;gt;打开文件位置-&amp;gt;Data-&amp;gt;PlaybackEngines-&amp;gt;androidplayer-&amp;gt;Variations-&amp;gt;mono/il2cpp-&amp;gt;release-&amp;gt;classes-&amp;gt;classes.jar&lt;/p&gt;
+
+&lt;p&gt;AndroidManifest.xml 添加启动入口&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;activity     
+    android:name=&quot;com.unity3d.player.UnityPlayerActivity&quot;
+    android:screenOrientation=&quot;landscape&quot;
+    android:label=&quot;@string/app_name&quot;&amp;gt;
+    &amp;lt;intent-filter&amp;gt;
+        &amp;lt;action android:name=&quot;android.intent.action.MAIN&quot; /&amp;gt;
+        &amp;lt;category android:name=&quot;android.intent.category.LAUNCHER&quot; /&amp;gt;
+    &amp;lt;/intent-filter&amp;gt;
+    &amp;lt;meta-data android:name=&quot;unityplayer.UnityActivity&quot; android:value=&quot;true&quot; /&amp;gt;
+    &amp;lt;meta-data android:name=&quot;unityplayer.ForwardNativeEventsToDalvik&quot; android:value=&quot;false&quot; /&amp;gt;
+&amp;lt;/activity&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>rockf91</name></author><summary type="html">在纯净的eclipse中安装adt插件 先 ping dl.google.com 获取 ip地址 打开 C:\Windows\System32\drivers\etc\hosts 文件，加上一行：ip地址 dl.google.com 例如 203.208.40.36 dl.google.com 在eclipse的help菜单中选择install new software，点击add，地址为adt -： http://dl.google.com/android/eclipse/，展开节点，全选developer tools。去掉contact all update sites during install to find required software,点击下一步，点击完成即可下载。 Eclipse 配置 Eclipse在创建项目时应该参照jdk目录下的jre路径，有了这个jre之后，有时候会干扰。所以我们指明一下就可以了： 1.进入window——preference——java——installed jres 2.点击add——standard vm——jre home指明到的你的jdk路径 Unity 配置 unity中classes.jar文件路径：点击unity图标右键选择属性-&amp;gt;打开文件位置-&amp;gt;Data-&amp;gt;PlaybackEngines-&amp;gt;androidplayer-&amp;gt;Variations-&amp;gt;mono/il2cpp-&amp;gt;release-&amp;gt;classes-&amp;gt;classes.jar AndroidManifest.xml 添加启动入口 &amp;lt;activity android:name=&quot;com.unity3d.player.UnityPlayerActivity&quot; android:screenOrientation=&quot;landscape&quot; android:label=&quot;@string/app_name&quot;&amp;gt; &amp;lt;intent-filter&amp;gt; &amp;lt;action android:name=&quot;android.intent.action.MAIN&quot; /&amp;gt; &amp;lt;category android:name=&quot;android.intent.category.LAUNCHER&quot; /&amp;gt; &amp;lt;/intent-filter&amp;gt; &amp;lt;meta-data android:name=&quot;unityplayer.UnityActivity&quot; android:value=&quot;true&quot; /&amp;gt; &amp;lt;meta-data android:name=&quot;unityplayer.ForwardNativeEventsToDalvik&quot; android:value=&quot;false&quot; /&amp;gt; &amp;lt;/activity&amp;gt;</summary></entry><entry><title type="html">adb调试</title><link href="https://rockf91.github.io/2019/09/24/adb/" rel="alternate" type="text/html" title="adb调试" /><published>2019-09-24T00:21:38+08:00</published><updated>2019-09-24T00:21:38+08:00</updated><id>https://rockf91.github.io/2019/09/24/adb</id><content type="html" xml:base="https://rockf91.github.io/2019/09/24/adb/">&lt;!-- more --&gt;
+
+&lt;p&gt;找到sdk中的adb路径，添加到环境变量
+&lt;code class=&quot;highlighter-rouge&quot;&gt;android-sdk\platform-tools&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;adb kill-server
+adb start-server
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;由于adb并不稳定, 有时候莫名的问题掉线时, 可以先kill-server, 然后start-server来确保Server进程启动. 往往可以解决问题.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;adb logcat -c //清空日志信息
+
+adb logcat -s Unity //只查看unity的信息
+
+adb logcat &amp;gt; xxx.txt //将之前log信息输出到txt中
+
+adb logcat -s Unity &amp;gt; xxx.txt //将之前Unity的log信息输出到txt中
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Logcat命令列表：&lt;/p&gt;
+
+&lt;p&gt;-d 将日志显示在控制台后退出
+-c 清理已存在的日志
+-f &lt;filename&gt; 将日志输出到文件&lt;/filename&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;adb logcat -f /sdcard/test.txt&lt;/code&gt;&lt;/p&gt;</content><author><name>rockf91</name></author><summary type="html">找到sdk中的adb路径，添加到环境变量 android-sdk\platform-tools adb kill-server adb start-server 由于adb并不稳定, 有时候莫名的问题掉线时, 可以先kill-server, 然后start-server来确保Server进程启动. 往往可以解决问题. adb logcat -c //清空日志信息 adb logcat -s Unity //只查看unity的信息 adb logcat &amp;gt; xxx.txt //将之前log信息输出到txt中 adb logcat -s Unity &amp;gt; xxx.txt //将之前Unity的log信息输出到txt中 Logcat命令列表： -d 将日志显示在控制台后退出 -c 清理已存在的日志 -f 将日志输出到文件 adb logcat -f /sdcard/test.txt</summary></entry><entry><title type="html">Blend混合命令</title><link href="https://rockf91.github.io/2019/09/11/blend/" rel="alternate" type="text/html" title="Blend混合命令" /><published>2019-09-11T00:21:38+08:00</published><updated>2019-09-11T00:21:38+08:00</updated><id>https://rockf91.github.io/2019/09/11/blend</id><content type="html" xml:base="https://rockf91.github.io/2019/09/11/blend/">&lt;!-- more --&gt;
+
+&lt;h1 id=&quot;blend混合命令&quot;&gt;Blend混合命令&lt;/h1&gt;
+
+&lt;p&gt;当同时存在透明物体和不透明物体，首先渲染不透明物体，将不透明物体颜色写入颜色缓存，深度写入深度缓冲，然后渲染透明物体（关闭深度写入，开启深度测试），将透明物体的颜色与颜色缓冲中的&lt;strong&gt;颜色混合&lt;/strong&gt;，得到正确结果。&lt;/p&gt;
+
+&lt;p&gt;UnityShaderLab提供了相应的Blend混合命令，用于指定后渲染产生的颜色如何与颜色缓存中的颜色进行混合。混合命令由Blend关键字，操作和因子组成，操作默认是加操作，下面给出 Blend 的常用语义：&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Blend Off
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;​    关闭混合&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Blend SrcFactor DstFactor
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;​    开启混合，SrcFactor 和 DstFactor 为混合因子(其实就是个系数)，S是源颜色，D是目的颜色，混合后的颜色Color如下，其rgb和a值都使用同一套混合因子：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://latex.codecogs.com/gif.latex?\inline&amp;space;\fn_cm&amp;space;Color_{rgb}&amp;space;=&amp;space;SrcFactor&amp;space;*&amp;space;S_{rgb}&amp;space;&amp;plus;&amp;space;DstFactor&amp;space;*&amp;space;D_{rgb}&quot; title=&quot;Color_{rgb} = SrcFactor * S_{rgb} + DstFactor * D_{rgb}&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://latex.codecogs.com/gif.latex?\inline&amp;space;\fn_cm&amp;space;Color_{a}&amp;space;=&amp;space;SrcFactor&amp;space;*&amp;space;S_{a}&amp;space;&amp;plus;&amp;space;DstFactor&amp;space;*&amp;space;D_{a}&quot; title=&quot;Color_{a} = SrcFactor * S_{a} + DstFactor * D_{a}&quot; /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Blend SrcFacter DstFactor, SrcFactorA  DstFactorA
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;​    同上，不过额外指定了透明通道的混合因子：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://latex.codecogs.com/gif.latex?\inline&amp;space;\fn_cm&amp;space;Color_{rgb}&amp;space;=&amp;space;SrcFactor&amp;space;*&amp;space;S_{rgb}&amp;space;&amp;plus;&amp;space;DstFactor&amp;space;*&amp;space;D_{rgb}&quot; title=&quot;Color_{rgb} = SrcFactor * S_{rgb} + DstFactor * D_{rgb}&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://latex.codecogs.com/gif.latex?\inline&amp;space;\fn_cm&amp;space;Color_{a}&amp;space;=&amp;space;SrcFactorA&amp;space;*&amp;space;S_{a}&amp;space;&amp;plus;&amp;space;DstFactorA&amp;space;*&amp;space;D_{a}&quot; title=&quot;Color_{a} = SrcFactorA * S_{a} + DstFactorA * D_{a}&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;支持的一些&lt;a href=&quot;https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.html&quot;&gt;混合因子&lt;/a&gt;：&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;&lt;strong&gt;参数&lt;/strong&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;strong&gt;描述&lt;/strong&gt;&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;a href=&quot;https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.Zero.html&quot;&gt;Zero&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;Blend factor is (0, 0, 0, 0).&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;a href=&quot;https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.One.html&quot;&gt;One&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;Blend factor is (1, 1, 1, 1).&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;a href=&quot;https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.DstColor.html&quot;&gt;DstColor&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;Blend factor is (Rd, Gd, Bd, Ad).&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;a href=&quot;https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.SrcColor.html&quot;&gt;SrcColor&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;Blend factor is (Rs, Gs, Bs, As).&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;a href=&quot;https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.OneMinusDstColor.html&quot;&gt;OneMinusDstColor&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;Blend factor is (1 - Rd, 1 - Gd, 1 - Bd, 1 - Ad).&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;a href=&quot;https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.SrcAlpha.html&quot;&gt;SrcAlpha&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;Blend factor is (As, As, As, As)&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;a href=&quot;https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.OneMinusSrcColor.html&quot;&gt;OneMinusSrcColor&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;Blend factor is (1 - Rs, 1 - Gs, 1 - Bs, 1 - As).&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;a href=&quot;https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.DstAlpha.html&quot;&gt;DstAlpha&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;Blend factor is (Ad, Ad, Ad, Ad).&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;a href=&quot;https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.OneMinusDstAlpha.html&quot;&gt;OneMinusDstAlpha&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;Blend factor is (1 - Ad, 1 - Ad, 1 - Ad, 1 - Ad).&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;a href=&quot;https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.SrcAlphaSaturate.html&quot;&gt;SrcAlphaSaturate&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;Blend factor is (f, f, f, 1); where f = min(As, 1 - Ad).&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;a href=&quot;https://docs.unity3d.com/ScriptReference/Rendering.BlendMode.OneMinusSrcAlpha.html&quot;&gt;OneMinusSrcAlpha&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;Blend factor is (1 - As, 1 - As, 1 - As, 1 - As).&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;几种常见的混合类型:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;//正常（Normal）
+Blend SrcAlpha OneMinusSrcAlpha
+
+//柔和相加（Soft Addtive）
+Blend OneMinusDstAlpha One
+
+//正片叠底（Multiply），即相乘
+Blend DstColor Zero
+
+//两倍相乘（2x Multiply）
+Blend DstColor SrcColor
+
+//变暗（Darken）
+BlendOp Min
+Blend One One
+
+//变亮（Lighten）
+BlendOp Max
+Blend One One
+
+//滤色（Screen）
+Blend OneMinusDstColor One
+
+//线性减淡（Linear Dodge）
+Blend One One
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>rockf91</name></author><summary type="html">Blend混合命令 当同时存在透明物体和不透明物体，首先渲染不透明物体，将不透明物体颜色写入颜色缓存，深度写入深度缓冲，然后渲染透明物体（关闭深度写入，开启深度测试），将透明物体的颜色与颜色缓冲中的颜色混合，得到正确结果。 UnityShaderLab提供了相应的Blend混合命令，用于指定后渲染产生的颜色如何与颜色缓存中的颜色进行混合。混合命令由Blend关键字，操作和因子组成，操作默认是加操作，下面给出 Blend 的常用语义： Blend Off ​ 关闭混合 Blend SrcFactor DstFactor ​ 开启混合，SrcFactor 和 DstFactor 为混合因子(其实就是个系数)，S是源颜色，D是目的颜色，混合后的颜色Color如下，其rgb和a值都使用同一套混合因子： Blend SrcFacter DstFactor, SrcFactorA DstFactorA ​ 同上，不过额外指定了透明通道的混合因子： 支持的一些混合因子： 参数 描述 Zero Blend factor is (0, 0, 0, 0). One Blend factor is (1, 1, 1, 1). DstColor Blend factor is (Rd, Gd, Bd, Ad). SrcColor Blend factor is (Rs, Gs, Bs, As). OneMinusDstColor Blend factor is (1 - Rd, 1 - Gd, 1 - Bd, 1 - Ad). SrcAlpha Blend factor is (As, As, As, As) OneMinusSrcColor Blend factor is (1 - Rs, 1 - Gs, 1 - Bs, 1 - As). DstAlpha Blend factor is (Ad, Ad, Ad, Ad). OneMinusDstAlpha Blend factor is (1 - Ad, 1 - Ad, 1 - Ad, 1 - Ad). SrcAlphaSaturate Blend factor is (f, f, f, 1); where f = min(As, 1 - Ad). OneMinusSrcAlpha Blend factor is (1 - As, 1 - As, 1 - As, 1 - As). 几种常见的混合类型: //正常（Normal） Blend SrcAlpha OneMinusSrcAlpha //柔和相加（Soft Addtive） Blend OneMinusDstAlpha One //正片叠底（Multiply），即相乘 Blend DstColor Zero //两倍相乘（2x Multiply） Blend DstColor SrcColor //变暗（Darken） BlendOp Min Blend One One //变亮（Lighten） BlendOp Max Blend One One //滤色（Screen） Blend OneMinusDstColor One //线性减淡（Linear Dodge） Blend One One</summary></entry><entry><title type="html">Travis CI Push 权限配置</title><link href="https://rockf91.github.io/2019/01/14/Travis-CI-Push-Set/" rel="alternate" type="text/html" title="Travis CI Push 权限配置" /><published>2019-01-14T06:46:38+08:00</published><updated>2019-01-14T06:46:38+08:00</updated><id>https://rockf91.github.io/2019/01/14/Travis-CI-Push-Set</id><content type="html" xml:base="https://rockf91.github.io/2019/01/14/Travis-CI-Push-Set/">&lt;!-- more --&gt;
+
+&lt;p&gt;要 Travis 向 Github 仓库 Push 的权限，需要由 SSH 协议机制来保证安全性。现在 Github 开放免费私有库使用，Travis Push 私有库通过 SSH 的方式比较方便安全。下面简单讲解一下如何配置。&lt;/p&gt;
+
+&lt;h2 id=&quot;基本原理&quot;&gt;基本原理&lt;/h2&gt;
+
+&lt;p&gt;首先，了解一下 git 使用 SSH 协议向 Github 仓库 Push 时采用的 &lt;strong&gt;公钥加密&lt;/strong&gt; 机制。&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Github 保存本机生成的 &lt;strong&gt;SSH公钥&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;git 客户端发起 Push 请求，Github 接收到后向客户端发送一个随机字符串&lt;/li&gt;
+  &lt;li&gt;git 客户端接收到后，使用本地的 &lt;strong&gt;SSH私钥&lt;/strong&gt; 对字符串进行加密，然后发送回 Github&lt;/li&gt;
+  &lt;li&gt;Github 使用存储的公钥对字符串进行解密，若和之前发送的字符串匹配，则验证通过。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;在 Github 中，可以添加用户全局的公钥，对用户的所有仓库具有权限；也可以对每一个仓库单独设置公钥，使得该公钥只能在该仓库的验证步骤中生效，即后文我们会用到的 Deploy Key。&lt;/p&gt;
+
+&lt;p&gt;要使得 Travis 能够向 Github 推送，用户需要以某种形式把本地的 &lt;strong&gt;SSH私钥&lt;/strong&gt; 发送给 Travis，直接发送显然是不安全的，于是 Travis 把用户的 SSH 私钥再次加密，然后每次在 CI 容器中解密私钥，再用私钥来完成推送前的验证步骤，加密私钥的过程可以通过其客户端 &lt;code class=&quot;highlighter-rouge&quot;&gt;travis&lt;/code&gt; 来完成。&lt;/p&gt;
+
+&lt;h2 id=&quot;步骤概览&quot;&gt;步骤概览&lt;/h2&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;在 Github 上创建一个仓库；&lt;/li&gt;
+  &lt;li&gt;为该仓库开启 &lt;a href=&quot;https://travis-ci.com/&quot;&gt;Travis CI&lt;/a&gt;；&lt;/li&gt;
+  &lt;li&gt;本地生成公钥并添加到仓库的 Deploy Key；&lt;/li&gt;
+  &lt;li&gt;克隆仓库到本地，并进入仓库目录；&lt;/li&gt;
+  &lt;li&gt;使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;travis&lt;/code&gt; 客户端加密 SSH 私钥；&lt;/li&gt;
+  &lt;li&gt;创建 CI 相关文件；&lt;/li&gt;
+  &lt;li&gt;推送仓库，触发 CI 并完成配置。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;下面对钥匙生成和添加、仓库克隆、加密私钥和配置文件进行详细说明。&lt;/p&gt;
+
+&lt;h3 id=&quot;钥匙生成&quot;&gt;钥匙生成&lt;/h3&gt;
+
+&lt;p&gt;生成 RSA Key Pair（使用你的邮箱替换命令中的邮箱）&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ ssh-keygen -t rsa -b 4096 -C &quot;your_email@example.com&quot;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;连续回车三次，会在 &lt;code class=&quot;highlighter-rouge&quot;&gt;~/.ssh/&lt;/code&gt; 目录中生成密钥对，其中 &lt;code class=&quot;highlighter-rouge&quot;&gt;~/.ssh/id_rsa.pub&lt;/code&gt; 即是需要添加到仓库的 Deploy Key 的公钥。&lt;code class=&quot;highlighter-rouge&quot;&gt;cat ~/.ssh/id_rsa.pub&lt;/code&gt;，然后选择并复制公钥内容，添加到仓库的 Deploy Key。&lt;/p&gt;
+
+&lt;p&gt;设置 Deploy Key 的页面为 &lt;code class=&quot;highlighter-rouge&quot;&gt;https://github.com/&amp;lt;your name&amp;gt;/&amp;lt;your repo&amp;gt;/settings/keys&lt;/code&gt;，将 &lt;code class=&quot;highlighter-rouge&quot;&gt;your name&lt;/code&gt; 和 &lt;code class=&quot;highlighter-rouge&quot;&gt;your name&lt;/code&gt; 分别替换为你的用户名和仓库名。注意需要选定 &lt;code class=&quot;highlighter-rouge&quot;&gt;Allow Write Access&lt;/code&gt;，开启该公钥对仓库的写权限。&lt;/p&gt;
+
+&lt;h3 id=&quot;克隆仓库&quot;&gt;克隆仓库&lt;/h3&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ git clone git@github.com:&amp;lt;username&amp;gt;/&amp;lt;reponame&amp;gt;.git
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;分别替换 &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;username&amp;gt;&lt;/code&gt; 和 &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;reponame&amp;gt;&lt;/code&gt; 为用户名和仓库名。&lt;/p&gt;
+
+&lt;p&gt;克隆完成后 &lt;code class=&quot;highlighter-rouge&quot;&gt;cd&lt;/code&gt; 进入仓库目录。&lt;/p&gt;
+
+&lt;h3 id=&quot;加密私钥&quot;&gt;加密私钥&lt;/h3&gt;
+
+&lt;p&gt;首先安装 &lt;code class=&quot;highlighter-rouge&quot;&gt;travis&lt;/code&gt; 客户端（假设系统已安装 Ruby）。&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ gem install travis
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;然后使用 Github 账户信息登录&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ travis login --com
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;创建 Travis CI 配置文件（空）&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ touch .travis.yml
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;登录成功以后使用&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ travis encrypt-file ~/.ssh/id_rsa --add
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;加密私钥并将加密信息添加到 &lt;code class=&quot;highlighter-rouge&quot;&gt;.travis.yml&lt;/code&gt;。加密成功后 &lt;code class=&quot;highlighter-rouge&quot;&gt;.travis.yml&lt;/code&gt; 文件内在&lt;code class=&quot;highlighter-rouge&quot;&gt;before_install&lt;/code&gt;段应该有解密私钥的指令，其中解密过程用到的钥匙以环境变量的形式指定，该环境变量的值对其他用户是透明的，从而保证了安全性。&lt;/p&gt;
+
+&lt;p&gt;要注意这里，生成的命令的-out选项的值多了一个\，类似 &lt;code class=&quot;highlighter-rouge&quot;&gt;-in ./id_rsa.enc -out ~\/.ssh/id_rsa -d&lt;/code&gt;，这会导致报错，要手工去掉。&lt;/p&gt;
+
+&lt;h3 id=&quot;配置文件&quot;&gt;配置文件&lt;/h3&gt;
+
+&lt;p&gt;一个通常的实践是，创建多个 git 分支，在某些分支上修改，构建成功后集成到 &lt;code class=&quot;highlighter-rouge&quot;&gt;master&lt;/code&gt; 分支。于是假设以下的示例流程：&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;创建一个 &lt;code class=&quot;highlighter-rouge&quot;&gt;dev&lt;/code&gt; 分支，在 &lt;code class=&quot;highlighter-rouge&quot;&gt;dev&lt;/code&gt; 分支上修改代码并推送；&lt;/li&gt;
+  &lt;li&gt;触发 Travis 的构建程序；&lt;/li&gt;
+  &lt;li&gt;若构建成功，将代码（或构建结果）推送到 &lt;code class=&quot;highlighter-rouge&quot;&gt;master&lt;/code&gt; 分支。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;创建 &lt;code class=&quot;highlighter-rouge&quot;&gt;dev&lt;/code&gt; 分支&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ git checkout -b dev
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;在 &lt;code class=&quot;highlighter-rouge&quot;&gt;.travis.yml&lt;/code&gt; 文件中 &lt;code class=&quot;highlighter-rouge&quot;&gt;travis&lt;/code&gt; 自动添加的信息（&lt;code class=&quot;highlighter-rouge&quot;&gt;before_install&lt;/code&gt;段）下面添加&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;- chmod 600 ~/.ssh/id_rsa
+- eval &quot;$(ssh-agent -s)&quot;
+- ssh-add ~/.ssh/id_rsa
+- git config --global user.name &quot;Travis Bot&quot;
+- git config --global user.email &amp;lt;your_email&amp;gt;@example.com
+- cd ~
+- git clone --depth=50 --branch=dev git@github.com:&amp;lt;username&amp;gt;/&amp;lt;reponame&amp;gt;.git build_dir
+- cd build_dir
+- git checkout -b master
+
+script:
+- bash -x ./compile.sh
+
+after_success:
+- git add --all
+- git commit -m&quot;:black_nib:Updated By Travis&quot;
+- git push -u origin HEAD:master --force
+
+branches:
+  except:
+    - master
+
+branches:
+  only:
+    - dev
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;注意需要替换 &lt;code class=&quot;highlighter-rouge&quot;&gt;user.email&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;username&amp;gt;&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;reponame&amp;gt;&lt;/code&gt; 等配置信息。&lt;/p&gt;
+
+&lt;p&gt;注意到 &lt;code class=&quot;highlighter-rouge&quot;&gt;script&lt;/code&gt; 段中调用 &lt;code class=&quot;highlighter-rouge&quot;&gt;compile.sh&lt;/code&gt; 脚本完成构建，因此需要创建一个 &lt;code class=&quot;highlighter-rouge&quot;&gt;compile.sh&lt;/code&gt; 文件，在里面添加项目相关的构建代码。&lt;/p&gt;
+
+&lt;p&gt;完成之后初始推送，即可触发 Travis 的第一次构建。&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ git add --all
+$ git commit -m&quot;init&quot;
+$ git push origin dev
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;到 Travis 上看看，Travis 构建完成后 &lt;code class=&quot;highlighter-rouge&quot;&gt;master&lt;/code&gt; 分支会在构建成功后由Travis的Push更新。&lt;/p&gt;</content><author><name>rockf91</name></author><summary type="html">要 Travis 向 Github 仓库 Push 的权限，需要由 SSH 协议机制来保证安全性。现在 Github 开放免费私有库使用，Travis Push 私有库通过 SSH 的方式比较方便安全。下面简单讲解一下如何配置。 基本原理 首先，了解一下 git 使用 SSH 协议向 Github 仓库 Push 时采用的 公钥加密 机制。 Github 保存本机生成的 SSH公钥 git 客户端发起 Push 请求，Github 接收到后向客户端发送一个随机字符串 git 客户端接收到后，使用本地的 SSH私钥 对字符串进行加密，然后发送回 Github Github 使用存储的公钥对字符串进行解密，若和之前发送的字符串匹配，则验证通过。 在 Github 中，可以添加用户全局的公钥，对用户的所有仓库具有权限；也可以对每一个仓库单独设置公钥，使得该公钥只能在该仓库的验证步骤中生效，即后文我们会用到的 Deploy Key。 要使得 Travis 能够向 Github 推送，用户需要以某种形式把本地的 SSH私钥 发送给 Travis，直接发送显然是不安全的，于是 Travis 把用户的 SSH 私钥再次加密，然后每次在 CI 容器中解密私钥，再用私钥来完成推送前的验证步骤，加密私钥的过程可以通过其客户端 travis 来完成。 步骤概览 在 Github 上创建一个仓库； 为该仓库开启 Travis CI； 本地生成公钥并添加到仓库的 Deploy Key； 克隆仓库到本地，并进入仓库目录； 使用 travis 客户端加密 SSH 私钥； 创建 CI 相关文件； 推送仓库，触发 CI 并完成配置。 下面对钥匙生成和添加、仓库克隆、加密私钥和配置文件进行详细说明。 钥匙生成 生成 RSA Key Pair（使用你的邮箱替换命令中的邮箱） $ ssh-keygen -t rsa -b 4096 -C &quot;your_email@example.com&quot; 连续回车三次，会在 ~/.ssh/ 目录中生成密钥对，其中 ~/.ssh/id_rsa.pub 即是需要添加到仓库的 Deploy Key 的公钥。cat ~/.ssh/id_rsa.pub，然后选择并复制公钥内容，添加到仓库的 Deploy Key。 设置 Deploy Key 的页面为 https://github.com/&amp;lt;your name&amp;gt;/&amp;lt;your repo&amp;gt;/settings/keys，将 your name 和 your name 分别替换为你的用户名和仓库名。注意需要选定 Allow Write Access，开启该公钥对仓库的写权限。 克隆仓库 $ git clone git@github.com:&amp;lt;username&amp;gt;/&amp;lt;reponame&amp;gt;.git 分别替换 &amp;lt;username&amp;gt; 和 &amp;lt;reponame&amp;gt; 为用户名和仓库名。 克隆完成后 cd 进入仓库目录。 加密私钥 首先安装 travis 客户端（假设系统已安装 Ruby）。 $ gem install travis 然后使用 Github 账户信息登录 $ travis login --com 创建 Travis CI 配置文件（空） $ touch .travis.yml 登录成功以后使用 $ travis encrypt-file ~/.ssh/id_rsa --add 加密私钥并将加密信息添加到 .travis.yml。加密成功后 .travis.yml 文件内在before_install段应该有解密私钥的指令，其中解密过程用到的钥匙以环境变量的形式指定，该环境变量的值对其他用户是透明的，从而保证了安全性。 要注意这里，生成的命令的-out选项的值多了一个\，类似 -in ./id_rsa.enc -out ~\/.ssh/id_rsa -d，这会导致报错，要手工去掉。 配置文件 一个通常的实践是，创建多个 git 分支，在某些分支上修改，构建成功后集成到 master 分支。于是假设以下的示例流程： 创建一个 dev 分支，在 dev 分支上修改代码并推送； 触发 Travis 的构建程序； 若构建成功，将代码（或构建结果）推送到 master 分支。 创建 dev 分支 $ git checkout -b dev 在 .travis.yml 文件中 travis 自动添加的信息（before_install段）下面添加 - chmod 600 ~/.ssh/id_rsa - eval &quot;$(ssh-agent -s)&quot; - ssh-add ~/.ssh/id_rsa - git config --global user.name &quot;Travis Bot&quot; - git config --global user.email &amp;lt;your_email&amp;gt;@example.com - cd ~ - git clone --depth=50 --branch=dev git@github.com:&amp;lt;username&amp;gt;/&amp;lt;reponame&amp;gt;.git build_dir - cd build_dir - git checkout -b master script: - bash -x ./compile.sh after_success: - git add --all - git commit -m&quot;:black_nib:Updated By Travis&quot; - git push -u origin HEAD:master --force branches: except: - master branches: only: - dev 注意需要替换 user.email, &amp;lt;username&amp;gt;, &amp;lt;reponame&amp;gt; 等配置信息。 注意到 script 段中调用 compile.sh 脚本完成构建，因此需要创建一个 compile.sh 文件，在里面添加项目相关的构建代码。 完成之后初始推送，即可触发 Travis 的第一次构建。 $ git add --all $ git commit -m&quot;init&quot; $ git push origin dev 到 Travis 上看看，Travis 构建完成后 master 分支会在构建成功后由Travis的Push更新。</summary></entry><entry><title type="html">python新建jekyll文章模板</title><link href="https://rockf91.github.io/2018/01/25/jekyll/" rel="alternate" type="text/html" title="python新建jekyll文章模板" /><published>2018-01-25T06:21:38+08:00</published><updated>2018-01-25T06:21:38+08:00</updated><id>https://rockf91.github.io/2018/01/25/jekyll</id><content type="html" xml:base="https://rockf91.github.io/2018/01/25/jekyll/">&lt;!-- more --&gt;
+
+&lt;p&gt;新建jekyll文章需要一个带时间格式的文本文件，每次手动新建非常麻烦，这样的重复劳动就交给python脚本来生成吧。&lt;/p&gt;
+
+&lt;p&gt;newArticle.py&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# -*- coding:utf-8 -*-
+&lt;/span&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;datetime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getopt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sys&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;now&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;datetime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;datetime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;now&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;strTitle&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;new&quot;&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;strTitle&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;strCategories&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;default&quot;&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;strCategories&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;strTime&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;now&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strftime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;Y-&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;m-&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;d-'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;strPath&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;_posts&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sep&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;strTime&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;strTitle&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;.md&quot;&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fobj&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;open&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strPath&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'w'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fobj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+		&lt;span class=&quot;s&quot;&gt;'---&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;
+		&lt;span class=&quot;s&quot;&gt;'layout: '&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'post'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;
+		&lt;span class=&quot;s&quot;&gt;'title: &quot;'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strTitle&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;
+		&lt;span class=&quot;s&quot;&gt;'categories: '&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strCategories&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;
+		&lt;span class=&quot;s&quot;&gt;'---&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fobj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'__main__'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sys&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:])&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;运行jekyll根目录下的newArticle.py&lt;/p&gt;
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;python&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;newArticle&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;py&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arg1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arg2&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;arg1:标题名，默认值”new”   &lt;br /&gt;
+arg2:分类名，默认值”default”&lt;/p&gt;</content><author><name>rockf91</name></author><summary type="html">新建jekyll文章需要一个带时间格式的文本文件，每次手动新建非常麻烦，这样的重复劳动就交给python脚本来生成吧。 newArticle.py # -*- coding:utf-8 -*- import datetime,os,getopt,sys def main(argv): now = datetime.datetime.now() if len(argv) == 0: strTitle = &quot;new&quot; else: strTitle = argv[0] if len(argv) &amp;lt;= 1: strCategories = &quot;default&quot; else: strCategories = argv[1] strTime = now.strftime('%Y-%m-%d-') strPath = &quot;_posts&quot; + os.sep + strTime + strTitle + &quot;.md&quot; fobj = open(strPath,'w') fobj.write( '---\n'+ 'layout: '+'post'+'\n'+ 'title: &quot;'+strTitle+'&quot;\n'+ 'categories: '+strCategories+'\n'+ '---\n') fobj.close() if __name__ == '__main__': main(sys.argv[1:]) 运行jekyll根目录下的newArticle.py python newArticle.py arg1 arg2 arg1:标题名，默认值”new” arg2:分类名，默认值”default”</summary></entry><entry><title type="html">jekyll使用markdown创建文章时，table没有边框的问题</title><link href="https://rockf91.github.io/2018/01/25/table-no-frame/" rel="alternate" type="text/html" title="jekyll使用markdown创建文章时，table没有边框的问题" /><published>2018-01-25T06:21:38+08:00</published><updated>2018-01-25T06:21:38+08:00</updated><id>https://rockf91.github.io/2018/01/25/table-no-frame</id><content type="html" xml:base="https://rockf91.github.io/2018/01/25/table-no-frame/">&lt;p&gt;直接在&lt;code class=&quot;highlighter-rouge&quot;&gt;_layout&lt;/code&gt;文件中的&lt;code class=&quot;highlighter-rouge&quot;&gt;default.html&lt;/code&gt;中的&lt;code class=&quot;highlighter-rouge&quot;&gt;body&lt;/code&gt;区块中加上下面代码, 就能正常显示&lt;/p&gt;
+
+&lt;!-- more --&gt;
+
+&lt;div class=&quot;language-html highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;style&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;table&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nl&quot;&gt;border-left&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1px&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;solid&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;#000000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;border-top&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1px&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;solid&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;#000000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;nl&quot;&gt;width&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;100%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;nl&quot;&gt;word-wrap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;break-word&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;word-break&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;break-all&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;table&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;th&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nl&quot;&gt;text-align&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;center&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;table&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;th&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;td&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nl&quot;&gt;border-right&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1px&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;solid&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;#000000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;border-bottom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1px&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;solid&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;#000000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/style&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>rockf91</name></author><summary type="html">直接在_layout文件中的default.html中的body区块中加上下面代码, 就能正常显示 &amp;lt;style&amp;gt; table{ border-left:1px solid #000000;border-top:1px solid #000000; width: 100%; word-wrap:break-word; word-break:break-all; } table th{ text-align:center; } table th,td{ border-right:1px solid #000000;border-bottom:1px solid #000000; } &amp;lt;/style&amp;gt;</summary></entry><entry><title type="html">咕咕机api打印</title><link href="https://rockf91.github.io/2018/01/25/print/" rel="alternate" type="text/html" title="咕咕机api打印" /><published>2018-01-25T06:21:38+08:00</published><updated>2018-01-25T06:21:38+08:00</updated><id>https://rockf91.github.io/2018/01/25/print</id><content type="html" xml:base="https://rockf91.github.io/2018/01/25/print/">&lt;!-- more --&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.memobird.shop&quot;&gt;咕咕机&lt;/a&gt;是一个wifi热敏打印机，可以通过向官方申请api自己提交花式打印。&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;#!/usr/bin/python
+#-*- coding:utf-8 -*-
+&lt;/span&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;requests&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;datetime&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;base64&lt;/span&gt;
+	
+&lt;span class=&quot;c1&quot;&gt;# 向官网申请的key
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ak&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'********************************'&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# 设备id
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;memobirdID&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'****************'&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# 咕咕id
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;useridentifying&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'******'&lt;/span&gt;
+	
+&lt;span class=&quot;n&quot;&gt;KEY_RES&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;showapi_res_code&quot;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;KEY_USERID&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;showapi_userid&quot;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;KEY_PRINTID&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;printcontentid&quot;&lt;/span&gt;
+	
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getTime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;dt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;datetime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;datetime&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;now&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strftime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;Y-&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;m-&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;d &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;H:&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;M:&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;S'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;getApiUserId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;http://open.memobird.cn/home/setuserbind&quot;&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;'ak'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ak&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;'timestamp'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getTime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;'memobirdID'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;memobirdID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;'useridentifying'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;useridentifying&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;res&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;requests&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;post&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;raise_for_status&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;assert&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;KEY_RES&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;KEY_USERID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;printpaper&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;userID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;http://open.memobird.cn/home/printpaper&quot;&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;content&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;unicode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'utf8'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;encode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'gbk'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;'ak'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ak&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;'timestamp'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getTime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;'printcontent'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'T:'&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;base64&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;b64encode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;content&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;'memobirdID'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;memobirdID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	    &lt;span class=&quot;s&quot;&gt;'userID'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;userID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;res&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;requests&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;post&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;url&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;raise_for_status&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;res&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;json&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;assert&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;KEY_RES&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;KEY_PRINTID&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__name__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'__main__'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;apiUserId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getApiUserId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;apiUserId:&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;apiUserId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;printId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;printpaper&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;apiUserId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;中文打印测试q34fd&amp;amp;*9&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;printId:&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;printId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>rockf91</name></author><summary type="html">咕咕机是一个wifi热敏打印机，可以通过向官方申请api自己提交花式打印。 #!/usr/bin/python #-*- coding:utf-8 -*- import requests, os import datetime import base64 # 向官网申请的key ak = '********************************' # 设备id memobirdID = '****************' # 咕咕id useridentifying = '******' KEY_RES = &quot;showapi_res_code&quot; KEY_USERID = &quot;showapi_userid&quot; KEY_PRINTID = &quot;printcontentid&quot; def getTime(): dt = datetime.datetime.now() return dt.strftime('%Y-%m-%d %H:%M:%S') def getApiUserId(): url = &quot;http://open.memobird.cn/home/setuserbind&quot; data = { 'ak': ak, 'timestamp': getTime(), 'memobirdID': memobirdID, 'useridentifying': useridentifying, } res = requests.post(url, data) res.raise_for_status() s = res.json() assert s[KEY_RES] == 1 return s[KEY_USERID] def printpaper(userID, text): url = &quot;http://open.memobird.cn/home/printpaper&quot; content = unicode(text, 'utf8').encode('gbk') data = { 'ak': ak, 'timestamp': getTime(), 'printcontent': 'T:'+ base64.b64encode(content), 'memobirdID': memobirdID, 'userID': userID, } res = requests.post(url, data) res.raise_for_status() s = res.json() assert s[KEY_RES] == 1 return s[KEY_PRINTID] if __name__ == '__main__': apiUserId = getApiUserId() print(&quot;apiUserId:&quot;, apiUserId) printId = printpaper(apiUserId, &quot;中文打印测试q34fd&amp;amp;*9&quot;) print(&quot;printId:&quot;, printId)</summary></entry><entry><title type="html">npm镜像源设置</title><link href="https://rockf91.github.io/2018/01/25/nrm/" rel="alternate" type="text/html" title="npm镜像源设置" /><published>2018-01-25T06:21:38+08:00</published><updated>2018-01-25T06:21:38+08:00</updated><id>https://rockf91.github.io/2018/01/25/nrm</id><content type="html" xml:base="https://rockf91.github.io/2018/01/25/nrm/">&lt;h2 id=&quot;npm设置源&quot;&gt;npm设置源&lt;/h2&gt;
+
+&lt;p&gt;默认源国内经常连不上，国内的源经常失效，怎么办呢，来试试nrm源管理器吧。&lt;/p&gt;
+
+&lt;!-- more --&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;npm config set registry http://registry.cnpmjs.org 
+npm info underscore （如果上面配置正确这个命令会有字符串response）
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;删除源
+&lt;code class=&quot;highlighter-rouge&quot;&gt;npm config delete registry&lt;/code&gt;
+或者 
+&lt;code class=&quot;highlighter-rouge&quot;&gt;npm config edit &lt;/code&gt;
+找到要删的那行删除&lt;/p&gt;
+
+&lt;h2 id=&quot;nrm--快速切换-npm-源-附带测速功能&quot;&gt;nrm —— 快速切换 NPM 源 （附带测速功能）&lt;/h2&gt;
+
+&lt;p&gt;nrm 是一个 NPM 源管理器，允许你快速地在如下 NPM 源间切换：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.npmjs.org/&quot;&gt;npm&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://cnpmjs.org/&quot;&gt;cnpm&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://strongloop.com/&quot;&gt;strongloop&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://npmjs.eu/&quot;&gt;european&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://npmjs.org.au/&quot;&gt;australia&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.nodejitsu.com/&quot;&gt;nodejitsu&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://npm.taobao.org/&quot;&gt;taobao&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;安装&quot;&gt;安装&lt;/h2&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;npm install -g nrm
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;使用&quot;&gt;使用&lt;/h2&gt;
+
+&lt;h3 id=&quot;列出可选的源&quot;&gt;列出可选的源&lt;/h3&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nrm ls                                                                                                                                    
+
+* npm ---- https://registry.npmjs.org/
+  cnpm --- http://r.cnpmjs.org/
+  taobao - http://registry.npm.taobao.org/
+  eu ----- http://registry.npmjs.eu/
+  au ----- http://registry.npmjs.org.au/
+  sl ----- http://npm.strongloop.com/
+  nj ----- https://registry.nodejitsu.com/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;带 &lt;code class=&quot;highlighter-rouge&quot;&gt;*&lt;/code&gt; 的是当前使用的源，上面的输出表明当前源是官方源。&lt;/p&gt;
+
+&lt;h3 id=&quot;切换&quot;&gt;切换&lt;/h3&gt;
+
+&lt;p&gt;切换到taobao&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nrm use taobao                                                                                                                             
+
+   Registry has been set to: http://registry.npm.taobao.org/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;增加源&quot;&gt;增加源&lt;/h3&gt;
+
+&lt;p&gt;你可以增加定制的源，特别适用于添加企业内部的私有源。&lt;a href=&quot;http://segmentfault.com/a/1190000000368906&quot;&gt;私有源可以使用cnpmjs架设&lt;/a&gt;。&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nrm add  &amp;lt;registry&amp;gt; &amp;lt;url&amp;gt; [home]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;删除源&quot;&gt;删除源&lt;/h3&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nrm del &amp;lt;registry&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;测试速度&quot;&gt;测试速度&lt;/h3&gt;
+
+&lt;p&gt;你还可以通过 &lt;code class=&quot;highlighter-rouge&quot;&gt;nrm test&lt;/code&gt; 测试相应源的响应时间。&lt;/p&gt;
+
+&lt;p&gt;例如，测试官方源的响应时间：&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nrm test npm                                                                                                                               
+
+  npm ---- 1328ms
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;测试所有源的响应时间：&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nrm test                                                                                                                                   
+
+  npm ---- 891ms
+  cnpm --- 1213ms
+* taobao - 460ms
+  eu ----- 3859ms
+  au ----- 1073ms
+  sl ----- 4150ms
+  nj ----- 8008ms
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;注意，为了取得较准确的结果，可以考虑多次测试取平均值。&lt;/p&gt;</content><author><name>rockf91</name></author><summary type="html">npm设置源</summary></entry></feed>

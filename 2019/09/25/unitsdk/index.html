@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" prefix="og: http://ogp.me/ns#" class="han-init">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>unity对接AndroidSDK &mdash; 游戏</title>
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/primer-css/css/primer.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/primer-markdown/dist/user-content.min.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/octicons/octicons/octicons.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/collection.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/repo-card.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/sections/repo-list.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/sections/mini-repo-list.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/boxed-group.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/common.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/share.js/dist/css/share.min.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/responsive.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/posts/index.css">
+    <!-- Latest compiled and minified CSS -->
+    
+
+    
+    <link rel="canonical" href="https://rockf91.github.io/2019/09/25/unitsdk/">
+    <link rel="alternate" type="application/atom+xml" title="游戏" href="https://rockf91.github.io/feed.xml">
+    <link rel="shortcut icon" href="https://rockf91.github.io/favicon.ico">
+    
+    <meta property="og:title" content="unity对接AndroidSDK">
+      
+    <meta name="keywords" content="游戏, rockf91">
+    <meta name="og:keywords" content="游戏, rockf91">
+      
+    <meta name="description" content="在纯净的eclipse中安装adt插件先 ping dl.google.com 获取 ip地址 打开 C:\Windows\System32\drivers\etc\hosts 文件，加上一行：ip地址 dl.google.com例如 203.208.40.36 dl.google.com在eclipse的help菜单中选择install new software，点击add，地址为adt -： http://dl.google.com/android/eclipse/，展开节点，全选developer tools。去掉contact all update sites during install to find required software,点击下一步，点击完成即可下载。Eclipse 配置Eclipse在创建项目时应该参照jdk目录下的jre路径，有了这个jre之后，有时候会干扰。所以我们指明一下就可以了：1.进入window——preference——java——installed jres2.点击add——standard vm——jre home指明到的你的jdk路径Unity 配置unity中classes.jar文件路径：点击unity图标右键选择属性-&gt;打开文件位置-&gt;Data-&gt;PlaybackEngines-&gt;androidplayer-&gt;Variations-&gt;mono/il2cpp-&gt;release-&gt;classes-&gt;classes.jarAndroidManifest.xml 添加启动入口&lt;activity         android:name="com.unity3d.player.UnityPlayerActivity"    android:screenOrientation="landscape"    android:label="@string/app_name"&gt;    &lt;intent-filter&gt;        &lt;action android:name="android.intent.action.MAIN" /&gt;        &lt;category android:name="android.intent.category.LAUNCHER" /&gt;    &lt;/intent-filter&gt;    &lt;meta-data android:name="unityplayer.UnityActivity" android:value="true" /&gt;    &lt;meta-data android:name="unityplayer.ForwardNativeEventsToDalvik" android:value="false" /&gt;&lt;/activity&gt;">
+    <meta name="og:description" content="在纯净的eclipse中安装adt插件先 ping dl.google.com 获取 ip地址 打开 C:\Windows\System32\drivers\etc\hosts 文件，加上一行：ip地址 dl.google.com例如 203.208.40.36 dl.google.com在eclipse的help菜单中选择install new software，点击add，地址为adt -： http://dl.google.com/android/eclipse/，展开节点，全选developer tools。去掉contact all update sites during install to find required software,点击下一步，点击完成即可下载。Eclipse 配置Eclipse在创建项目时应该参照jdk目录下的jre路径，有了这个jre之后，有时候会干扰。所以我们指明一下就可以了：1.进入window——preference——java——installed jres2.点击add——standard vm——jre home指明到的你的jdk路径Unity 配置unity中classes.jar文件路径：点击unity图标右键选择属性-&gt;打开文件位置-&gt;Data-&gt;PlaybackEngines-&gt;androidplayer-&gt;Variations-&gt;mono/il2cpp-&gt;release-&gt;classes-&gt;classes.jarAndroidManifest.xml 添加启动入口&lt;activity         android:name="com.unity3d.player.UnityPlayerActivity"    android:screenOrientation="landscape"    android:label="@string/app_name"&gt;    &lt;intent-filter&gt;        &lt;action android:name="android.intent.action.MAIN" /&gt;        &lt;category android:name="android.intent.category.LAUNCHER" /&gt;    &lt;/intent-filter&gt;    &lt;meta-data android:name="unityplayer.UnityActivity" android:value="true" /&gt;    &lt;meta-data android:name="unityplayer.ForwardNativeEventsToDalvik" android:value="false" /&gt;&lt;/activity&gt;">
+      
+    
+    
+        
+    
+    <meta property="og:url" content="https://rockf91.github.io/2019/09/25/unitsdk/">
+    <meta property="og:site_name" content="游戏">
+    <meta property="og:type" content="article">
+    <meta property="og:locale" content="zh_CN" />
+    
+    <meta property="article:published_time" content="2019-09-25">
+    
+    <script src="https://rockf91.github.io/assets/vendor/jquery/dist/jquery.min.js"></script>
+    <script src="https://rockf91.github.io/assets/js/jquery-ui.js"></script>
+    <script src="https://rockf91.github.io/assets/js/main.js"></script>
+</head>
+<body class="" data-mz="">
+    <header class="site-header">
+        <div class="container">
+            <h1><a href="https://rockf91.github.io/" title="游戏"><span class="octicon octicon-mark-github"></span> 游戏</a></h1>
+            <button class="collapsed mobile-visible" type="button" onclick="toggleMenu();">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <nav class="site-header-nav" role="navigation">
+                
+                <a href="https://rockf91.github.io/" class=" site-header-nav-item" target="" title="首页">首页</a>
+                
+                <a href="https://rockf91.github.io/categories/" class=" site-header-nav-item" target="" title="分类">分类</a>
+                
+                <a href="https://rockf91.github.io/wiki/" class=" site-header-nav-item" target="" title="维基">维基</a>
+                
+                <a href="https://rockf91.github.io/links/" class=" site-header-nav-item" target="" title="链接">链接</a>
+                
+                <a href="https://rockf91.github.io/about/" class=" site-header-nav-item" target="" title="关于">关于</a>
+                
+            </nav>
+        </div>
+    </header>
+    <!-- / header -->
+
+    <section class="collection-head small geopattern" data-pattern-id="unity对接AndroidS">
+<div class="container">
+  <div class="columns">
+    <div class="column three-fourths">
+      <div class="collection-title">
+        <h1 class="collection-header">unity对接AndroidSDK</h1>
+        <div class="collection-info">
+          
+          <span class="meta-info">
+            <span class="octicon octicon-calendar"></span> 2019/09/25
+          </span>
+          
+          
+          <span class="meta-info">
+            <span class="octicon octicon-file-directory"></span>
+            <a href="https://rockf91.github.io/categories/#android" title="android">android</a>
+          </span>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<!-- / .banner -->
+<section class="container content">
+<div class="columns">
+  <div class="column three-fourths" >
+    <article class="article-content markdown-body">
+    <!-- more -->
+<h2 id="在纯净的eclipse中安装adt插件">在纯净的eclipse中安装adt插件</h2>
+
+<p>先 <code class="highlighter-rouge">ping dl.google.com</code> 获取 <code class="highlighter-rouge">ip地址</code> 
+打开 <code class="highlighter-rouge">C:\Windows\System32\drivers\etc\hosts</code> 文件，加上一行：<code class="highlighter-rouge">ip地址 dl.google.com</code><br />
+例如 <code class="highlighter-rouge">203.208.40.36 dl.google.com</code></p>
+
+<p>在eclipse的help菜单中选择install new software，点击add，地址为adt -： <code class="highlighter-rouge">http://dl.google.com/android/eclipse/</code>，展开节点，全选developer tools。去掉contact all update sites during install to find required software,点击下一步，点击完成即可下载。</p>
+
+<h2 id="eclipse-配置">Eclipse 配置</h2>
+<p>Eclipse在创建项目时应该参照jdk目录下的jre路径，有了这个jre之后，有时候会干扰。所以我们指明一下就可以了：
+1.进入window——preference——java——installed jres
+2.点击add——standard vm——jre home指明到的你的jdk路径</p>
+
+<h2 id="unity-配置">Unity 配置</h2>
+<p>unity中classes.jar文件路径：点击unity图标右键选择属性-&gt;打开文件位置-&gt;Data-&gt;PlaybackEngines-&gt;androidplayer-&gt;Variations-&gt;mono/il2cpp-&gt;release-&gt;classes-&gt;classes.jar</p>
+
+<p>AndroidManifest.xml 添加启动入口</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;activity     
+    android:name="com.unity3d.player.UnityPlayerActivity"
+    android:screenOrientation="landscape"
+    android:label="@string/app_name"&gt;
+    &lt;intent-filter&gt;
+        &lt;action android:name="android.intent.action.MAIN" /&gt;
+        &lt;category android:name="android.intent.category.LAUNCHER" /&gt;
+    &lt;/intent-filter&gt;
+    &lt;meta-data android:name="unityplayer.UnityActivity" android:value="true" /&gt;
+    &lt;meta-data android:name="unityplayer.ForwardNativeEventsToDalvik" android:value="false" /&gt;
+&lt;/activity&gt;
+</code></pre></div></div>
+
+    </article>
+    <div class="share">
+      <div class="share-component"></div>
+    </div>
+    <div class="comment">
+      
+
+  
+
+  
+
+
+    </div>
+  </div>
+  <div class="column one-fourth">
+    
+<h3>Search</h3>
+<div id="site_search">
+    <input type="text" id="search_box" placeholder="Search">
+</div>
+
+<ul id="search_results"></ul>
+
+<link rel="stylesheet" type="text/css" href="https://rockf91.github.io/assets/css/modules/sidebar-search.css">
+<script src="https://rockf91.github.io/assets/js/simple-jekyll-search.min.js"></script>
+<script src="https://rockf91.github.io/assets/js/search.js"></script>
+
+<script type="text/javascript">
+SimpleJekyllSearch({
+    searchInput: document.getElementById('search_box'),
+    resultsContainer: document.getElementById('search_results'),
+    json: 'https://rockf91.github.io/assets/search_data.json',
+    searchResultTemplate: '<li><a href="{url}" title="{desc}">{title}</a></li>',
+    noResultsText: 'No results found',
+    limit: 10,
+    fuzzy: false,
+    exclude: ['Welcome']
+})
+</script>
+
+    
+
+    
+<h3 class="post-directory-title mobile-hidden">Table of Contents</h3>
+<div id="post-directory-module" class="mobile-hidden">
+  <section class="post-directory">
+  <!-- Links that trigger the jumping -->
+  <!-- Added by javascript below -->
+  <dl></dl>
+  </section>
+</div>
+
+<script src="https://rockf91.github.io/assets/js/jquery.toc.js"></script>
+
+  </div>
+</div>
+</section>
+<!-- /section.content -->
+
+    <footer class="container">
+        <div class="site-footer" role="contentinfo">
+            <div class="copyright left mobile-block">
+                    © 2015
+                    <span title="rockf91">rockf91</span>
+                    <a href="javascript:window.scrollTo(0,0)" class="right mobile-visible">TOP</a>
+            </div>
+
+            <ul class="site-footer-links right mobile-hidden">
+                <li>
+                    <a href="javascript:window.scrollTo(0,0)" >TOP</a>
+                </li>
+            </ul>
+            <a href="https://github.com/rockf91/rockf91.github.io" target="_blank" aria-label="view source code">
+                <span class="mega-octicon octicon-mark-github" title="GitHub"></span>
+            </a>
+            <ul class="site-footer-links mobile-hidden">
+                
+                <li>
+                    <a href="https://rockf91.github.io/" title="首页" target="">首页</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/categories/" title="分类" target="">分类</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/wiki/" title="维基" target="">维基</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/links/" title="链接" target="">链接</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/about/" title="关于" target="">关于</a>
+                </li>
+                
+                <li><a href="https://rockf91.github.io/feed.xml"><span class="octicon octicon-rss" style="color:orange;"></span></a></li>
+            </ul>
+
+        </div>
+    </footer>
+    <div class="tools-wrapper">
+      <a class="gotop" href="#" title="回到顶部"><span class="octicon octicon-arrow-up"></span></a>
+    </div>
+    <!-- / footer -->
+    <script src="https://rockf91.github.io/assets/vendor/share.js/dist/js/share.min.js"></script>
+    <script src="https://rockf91.github.io/assets/js/geopattern.js"></script>
+    <script src="https://rockf91.github.io/assets/js/prism.js"></script>
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/prism.css">
+    <script>
+      jQuery(document).ready(function($) {
+        // geopattern
+        $('.geopattern').each(function(){
+          $(this).geopattern($(this).data('pattern-id'));
+        });
+       // hljs.initHighlightingOnLoad();
+      });
+    </script>
+
+    
+
+    
+
+    
+
+    
+
+    
+</body>
+</html>

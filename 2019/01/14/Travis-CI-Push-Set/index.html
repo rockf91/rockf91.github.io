@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" prefix="og: http://ogp.me/ns#" class="han-init">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>Travis CI Push 权限配置 &mdash; 游戏</title>
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/primer-css/css/primer.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/primer-markdown/dist/user-content.min.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/octicons/octicons/octicons.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/collection.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/repo-card.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/sections/repo-list.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/sections/mini-repo-list.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/components/boxed-group.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/common.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/vendor/share.js/dist/css/share.min.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/responsive.css">
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/posts/index.css">
+    <!-- Latest compiled and minified CSS -->
+    
+
+    
+    <link rel="canonical" href="https://rockf91.github.io/2019/01/14/Travis-CI-Push-Set/">
+    <link rel="alternate" type="application/atom+xml" title="游戏" href="https://rockf91.github.io/feed.xml">
+    <link rel="shortcut icon" href="https://rockf91.github.io/favicon.ico">
+    
+    <meta property="og:title" content="Travis CI Push 权限配置">
+      
+    <meta name="keywords" content="游戏, rockf91">
+    <meta name="og:keywords" content="游戏, rockf91">
+      
+    <meta name="description" content="要 Travis 向 Github 仓库 Push 的权限，需要由 SSH 协议机制来保证安全性。现在 Github 开放免费私有库使用，Travis Push 私有库通过 SSH 的方式比较方便安全。下面简单讲解一下如何配置。基本原理首先，了解一下 git 使用 SSH 协议向 Github 仓库 Push 时采用的 公钥加密 机制。  Github 保存本机生成的 SSH公钥  git 客户端发起 Push 请求，Github 接收到后向客户端发送一个随机字符串  git 客户端接收到后，使用本地的 SSH私钥 对字符串进行加密，然后发送回 Github  Github 使用存储的公钥对字符串进行解密，若和之前发送的字符串匹配，则验证通过。在 Github 中，可以添加用户全局的公钥，对用户的所有仓库具有权限；也可以对每一个仓库单独设置公钥，使得该公钥只能在该仓库的验证步骤中生效，即后文我们会用到的 Deploy Key。要使得 Travis 能够向 Github 推送，用户需要以某种形式把本地的 SSH私钥 发送给 Travis，直接发送显然是不安全的，于是 Travis 把用户的 SSH 私钥再次加密，然后每次在 CI 容器中解密私钥，再用私钥来完成推送前的验证步骤，加密私钥的过程可以通过其客户端 travis 来完成。步骤概览  在 Github 上创建一个仓库；  为该仓库开启 Travis CI；  本地生成公钥并添加到仓库的 Deploy Key；  克隆仓库到本地，并进入仓库目录；  使用 travis 客户端加密 SSH 私钥；  创建 CI 相关文件；  推送仓库，触发 CI 并完成配置。下面对钥匙生成和添加、仓库克隆、加密私钥和配置文件进行详细说明。钥匙生成生成 RSA Key Pair（使用你的邮箱替换命令中的邮箱）$ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"连续回车三次，会在 ~/.ssh/ 目录中生成密钥对，其中 ~/.ssh/id_rsa.pub 即是需要添加到仓库的 Deploy Key 的公钥。cat ~/.ssh/id_rsa.pub，然后选择并复制公钥内容，添加到仓库的 Deploy Key。设置 Deploy Key 的页面为 https://github.com/&lt;your name&gt;/&lt;your repo&gt;/settings/keys，将 your name 和 your name 分别替换为你的用户名和仓库名。注意需要选定 Allow Write Access，开启该公钥对仓库的写权限。克隆仓库$ git clone git@github.com:&lt;username&gt;/&lt;reponame&gt;.git分别替换 &lt;username&gt; 和 &lt;reponame&gt; 为用户名和仓库名。克隆完成后 cd 进入仓库目录。加密私钥首先安装 travis 客户端（假设系统已安装 Ruby）。$ gem install travis然后使用 Github 账户信息登录$ travis login --com创建 Travis CI 配置文件（空）$ touch .travis.yml登录成功以后使用$ travis encrypt-file ~/.ssh/id_rsa --add加密私钥并将加密信息添加到 .travis.yml。加密成功后 .travis.yml 文件内在before_install段应该有解密私钥的指令，其中解密过程用到的钥匙以环境变量的形式指定，该环境变量的值对其他用户是透明的，从而保证了安全性。要注意这里，生成的命令的-out选项的值多了一个\，类似 -in ./id_rsa.enc -out ~\/.ssh/id_rsa -d，这会导致报错，要手工去掉。配置文件一个通常的实践是，创建多个 git 分支，在某些分支上修改，构建成功后集成到 master 分支。于是假设以下的示例流程：  创建一个 dev 分支，在 dev 分支上修改代码并推送；  触发 Travis 的构建程序；  若构建成功，将代码（或构建结果）推送到 master 分支。创建 dev 分支$ git checkout -b dev在 .travis.yml 文件中 travis 自动添加的信息（before_install段）下面添加- chmod 600 ~/.ssh/id_rsa- eval "$(ssh-agent -s)"- ssh-add ~/.ssh/id_rsa- git config --global user.name "Travis Bot"- git config --global user.email &lt;your_email&gt;@example.com- cd ~- git clone --depth=50 --branch=dev git@github.com:&lt;username&gt;/&lt;reponame&gt;.git build_dir- cd build_dir- git checkout -b masterscript:- bash -x ./compile.shafter_success:- git add --all- git commit -m":black_nib:Updated By Travis"- git push -u origin HEAD:master --forcebranches:  except:    - masterbranches:  only:    - dev注意需要替换 user.email, &lt;username&gt;, &lt;reponame&gt; 等配置信息。注意到 script 段中调用 compile.sh 脚本完成构建，因此需要创建一个 compile.sh 文件，在里面添加项目相关的构建代码。完成之后初始推送，即可触发 Travis 的第一次构建。$ git add --all$ git commit -m"init"$ git push origin dev到 Travis 上看看，Travis 构建完成后 master 分支会在构建成功后由Travis的Push更新。">
+    <meta name="og:description" content="要 Travis 向 Github 仓库 Push 的权限，需要由 SSH 协议机制来保证安全性。现在 Github 开放免费私有库使用，Travis Push 私有库通过 SSH 的方式比较方便安全。下面简单讲解一下如何配置。基本原理首先，了解一下 git 使用 SSH 协议向 Github 仓库 Push 时采用的 公钥加密 机制。  Github 保存本机生成的 SSH公钥  git 客户端发起 Push 请求，Github 接收到后向客户端发送一个随机字符串  git 客户端接收到后，使用本地的 SSH私钥 对字符串进行加密，然后发送回 Github  Github 使用存储的公钥对字符串进行解密，若和之前发送的字符串匹配，则验证通过。在 Github 中，可以添加用户全局的公钥，对用户的所有仓库具有权限；也可以对每一个仓库单独设置公钥，使得该公钥只能在该仓库的验证步骤中生效，即后文我们会用到的 Deploy Key。要使得 Travis 能够向 Github 推送，用户需要以某种形式把本地的 SSH私钥 发送给 Travis，直接发送显然是不安全的，于是 Travis 把用户的 SSH 私钥再次加密，然后每次在 CI 容器中解密私钥，再用私钥来完成推送前的验证步骤，加密私钥的过程可以通过其客户端 travis 来完成。步骤概览  在 Github 上创建一个仓库；  为该仓库开启 Travis CI；  本地生成公钥并添加到仓库的 Deploy Key；  克隆仓库到本地，并进入仓库目录；  使用 travis 客户端加密 SSH 私钥；  创建 CI 相关文件；  推送仓库，触发 CI 并完成配置。下面对钥匙生成和添加、仓库克隆、加密私钥和配置文件进行详细说明。钥匙生成生成 RSA Key Pair（使用你的邮箱替换命令中的邮箱）$ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"连续回车三次，会在 ~/.ssh/ 目录中生成密钥对，其中 ~/.ssh/id_rsa.pub 即是需要添加到仓库的 Deploy Key 的公钥。cat ~/.ssh/id_rsa.pub，然后选择并复制公钥内容，添加到仓库的 Deploy Key。设置 Deploy Key 的页面为 https://github.com/&lt;your name&gt;/&lt;your repo&gt;/settings/keys，将 your name 和 your name 分别替换为你的用户名和仓库名。注意需要选定 Allow Write Access，开启该公钥对仓库的写权限。克隆仓库$ git clone git@github.com:&lt;username&gt;/&lt;reponame&gt;.git分别替换 &lt;username&gt; 和 &lt;reponame&gt; 为用户名和仓库名。克隆完成后 cd 进入仓库目录。加密私钥首先安装 travis 客户端（假设系统已安装 Ruby）。$ gem install travis然后使用 Github 账户信息登录$ travis login --com创建 Travis CI 配置文件（空）$ touch .travis.yml登录成功以后使用$ travis encrypt-file ~/.ssh/id_rsa --add加密私钥并将加密信息添加到 .travis.yml。加密成功后 .travis.yml 文件内在before_install段应该有解密私钥的指令，其中解密过程用到的钥匙以环境变量的形式指定，该环境变量的值对其他用户是透明的，从而保证了安全性。要注意这里，生成的命令的-out选项的值多了一个\，类似 -in ./id_rsa.enc -out ~\/.ssh/id_rsa -d，这会导致报错，要手工去掉。配置文件一个通常的实践是，创建多个 git 分支，在某些分支上修改，构建成功后集成到 master 分支。于是假设以下的示例流程：  创建一个 dev 分支，在 dev 分支上修改代码并推送；  触发 Travis 的构建程序；  若构建成功，将代码（或构建结果）推送到 master 分支。创建 dev 分支$ git checkout -b dev在 .travis.yml 文件中 travis 自动添加的信息（before_install段）下面添加- chmod 600 ~/.ssh/id_rsa- eval "$(ssh-agent -s)"- ssh-add ~/.ssh/id_rsa- git config --global user.name "Travis Bot"- git config --global user.email &lt;your_email&gt;@example.com- cd ~- git clone --depth=50 --branch=dev git@github.com:&lt;username&gt;/&lt;reponame&gt;.git build_dir- cd build_dir- git checkout -b masterscript:- bash -x ./compile.shafter_success:- git add --all- git commit -m":black_nib:Updated By Travis"- git push -u origin HEAD:master --forcebranches:  except:    - masterbranches:  only:    - dev注意需要替换 user.email, &lt;username&gt;, &lt;reponame&gt; 等配置信息。注意到 script 段中调用 compile.sh 脚本完成构建，因此需要创建一个 compile.sh 文件，在里面添加项目相关的构建代码。完成之后初始推送，即可触发 Travis 的第一次构建。$ git add --all$ git commit -m"init"$ git push origin dev到 Travis 上看看，Travis 构建完成后 master 分支会在构建成功后由Travis的Push更新。">
+      
+    
+    
+        
+    
+    <meta property="og:url" content="https://rockf91.github.io/2019/01/14/Travis-CI-Push-Set/">
+    <meta property="og:site_name" content="游戏">
+    <meta property="og:type" content="article">
+    <meta property="og:locale" content="zh_CN" />
+    
+    <meta property="article:published_time" content="2019-01-14">
+    
+    <script src="https://rockf91.github.io/assets/vendor/jquery/dist/jquery.min.js"></script>
+    <script src="https://rockf91.github.io/assets/js/jquery-ui.js"></script>
+    <script src="https://rockf91.github.io/assets/js/main.js"></script>
+</head>
+<body class="" data-mz="">
+    <header class="site-header">
+        <div class="container">
+            <h1><a href="https://rockf91.github.io/" title="游戏"><span class="octicon octicon-mark-github"></span> 游戏</a></h1>
+            <button class="collapsed mobile-visible" type="button" onclick="toggleMenu();">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <nav class="site-header-nav" role="navigation">
+                
+                <a href="https://rockf91.github.io/" class=" site-header-nav-item" target="" title="首页">首页</a>
+                
+                <a href="https://rockf91.github.io/categories/" class=" site-header-nav-item" target="" title="分类">分类</a>
+                
+                <a href="https://rockf91.github.io/wiki/" class=" site-header-nav-item" target="" title="维基">维基</a>
+                
+                <a href="https://rockf91.github.io/links/" class=" site-header-nav-item" target="" title="链接">链接</a>
+                
+                <a href="https://rockf91.github.io/about/" class=" site-header-nav-item" target="" title="关于">关于</a>
+                
+            </nav>
+        </div>
+    </header>
+    <!-- / header -->
+
+    <section class="collection-head small geopattern" data-pattern-id="Travis CI Push ">
+<div class="container">
+  <div class="columns">
+    <div class="column three-fourths">
+      <div class="collection-title">
+        <h1 class="collection-header">Travis CI Push 权限配置</h1>
+        <div class="collection-info">
+          
+          <span class="meta-info">
+            <span class="octicon octicon-calendar"></span> 2019/01/14
+          </span>
+          
+          
+          <span class="meta-info">
+            <span class="octicon octicon-file-directory"></span>
+            <a href="https://rockf91.github.io/categories/#Travis" title="Travis">Travis</a>
+          </span>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+<!-- / .banner -->
+<section class="container content">
+<div class="columns">
+  <div class="column three-fourths">
+    <article class="article-content markdown-body">
+    <!-- more -->
+
+<p>要 Travis 向 Github 仓库 Push 的权限，需要由 SSH 协议机制来保证安全性。现在 Github 开放免费私有库使用，Travis Push 私有库通过 SSH 的方式比较方便安全。下面简单讲解一下如何配置。</p>
+
+<h2 id="基本原理">基本原理</h2>
+
+<p>首先，了解一下 git 使用 SSH 协议向 Github 仓库 Push 时采用的 <strong>公钥加密</strong> 机制。</p>
+
+<ol>
+  <li>Github 保存本机生成的 <strong>SSH公钥</strong>
+</li>
+  <li>git 客户端发起 Push 请求，Github 接收到后向客户端发送一个随机字符串</li>
+  <li>git 客户端接收到后，使用本地的 <strong>SSH私钥</strong> 对字符串进行加密，然后发送回 Github</li>
+  <li>Github 使用存储的公钥对字符串进行解密，若和之前发送的字符串匹配，则验证通过。</li>
+</ol>
+
+<p>在 Github 中，可以添加用户全局的公钥，对用户的所有仓库具有权限；也可以对每一个仓库单独设置公钥，使得该公钥只能在该仓库的验证步骤中生效，即后文我们会用到的 Deploy Key。</p>
+
+<p>要使得 Travis 能够向 Github 推送，用户需要以某种形式把本地的 <strong>SSH私钥</strong> 发送给 Travis，直接发送显然是不安全的，于是 Travis 把用户的 SSH 私钥再次加密，然后每次在 CI 容器中解密私钥，再用私钥来完成推送前的验证步骤，加密私钥的过程可以通过其客户端 <code class="highlighter-rouge">travis</code> 来完成。</p>
+
+<h2 id="步骤概览">步骤概览</h2>
+
+<ol>
+  <li>在 Github 上创建一个仓库；</li>
+  <li>为该仓库开启 <a href="https://travis-ci.com/">Travis CI</a>；</li>
+  <li>本地生成公钥并添加到仓库的 Deploy Key；</li>
+  <li>克隆仓库到本地，并进入仓库目录；</li>
+  <li>使用 <code class="highlighter-rouge">travis</code> 客户端加密 SSH 私钥；</li>
+  <li>创建 CI 相关文件；</li>
+  <li>推送仓库，触发 CI 并完成配置。</li>
+</ol>
+
+<p>下面对钥匙生成和添加、仓库克隆、加密私钥和配置文件进行详细说明。</p>
+
+<h3 id="钥匙生成">钥匙生成</h3>
+
+<p>生成 RSA Key Pair（使用你的邮箱替换命令中的邮箱）</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+
+</code></pre></div></div>
+
+<p>连续回车三次，会在 <code class="highlighter-rouge">~/.ssh/</code> 目录中生成密钥对，其中 <code class="highlighter-rouge">~/.ssh/id_rsa.pub</code> 即是需要添加到仓库的 Deploy Key 的公钥。<code class="highlighter-rouge">cat ~/.ssh/id_rsa.pub</code>，然后选择并复制公钥内容，添加到仓库的 Deploy Key。</p>
+
+<p>设置 Deploy Key 的页面为 <code class="highlighter-rouge">https://github.com/&lt;your name&gt;/&lt;your repo&gt;/settings/keys</code>，将 <code class="highlighter-rouge">your name</code> 和 <code class="highlighter-rouge">your name</code> 分别替换为你的用户名和仓库名。注意需要选定 <code class="highlighter-rouge">Allow Write Access</code>，开启该公钥对仓库的写权限。</p>
+
+<h3 id="克隆仓库">克隆仓库</h3>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git clone git@github.com:&lt;username&gt;/&lt;reponame&gt;.git
+
+</code></pre></div></div>
+
+<p>分别替换 <code class="highlighter-rouge">&lt;username&gt;</code> 和 <code class="highlighter-rouge">&lt;reponame&gt;</code> 为用户名和仓库名。</p>
+
+<p>克隆完成后 <code class="highlighter-rouge">cd</code> 进入仓库目录。</p>
+
+<h3 id="加密私钥">加密私钥</h3>
+
+<p>首先安装 <code class="highlighter-rouge">travis</code> 客户端（假设系统已安装 Ruby）。</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ gem install travis
+
+</code></pre></div></div>
+
+<p>然后使用 Github 账户信息登录</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ travis login --com
+
+</code></pre></div></div>
+
+<p>创建 Travis CI 配置文件（空）</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ touch .travis.yml
+
+</code></pre></div></div>
+
+<p>登录成功以后使用</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ travis encrypt-file ~/.ssh/id_rsa --add
+
+</code></pre></div></div>
+
+<p>加密私钥并将加密信息添加到 <code class="highlighter-rouge">.travis.yml</code>。加密成功后 <code class="highlighter-rouge">.travis.yml</code> 文件内在<code class="highlighter-rouge">before_install</code>段应该有解密私钥的指令，其中解密过程用到的钥匙以环境变量的形式指定，该环境变量的值对其他用户是透明的，从而保证了安全性。</p>
+
+<p>要注意这里，生成的命令的-out选项的值多了一个\，类似 <code class="highlighter-rouge">-in ./id_rsa.enc -out ~\/.ssh/id_rsa -d</code>，这会导致报错，要手工去掉。</p>
+
+<h3 id="配置文件">配置文件</h3>
+
+<p>一个通常的实践是，创建多个 git 分支，在某些分支上修改，构建成功后集成到 <code class="highlighter-rouge">master</code> 分支。于是假设以下的示例流程：</p>
+
+<ol>
+  <li>创建一个 <code class="highlighter-rouge">dev</code> 分支，在 <code class="highlighter-rouge">dev</code> 分支上修改代码并推送；</li>
+  <li>触发 Travis 的构建程序；</li>
+  <li>若构建成功，将代码（或构建结果）推送到 <code class="highlighter-rouge">master</code> 分支。</li>
+</ol>
+
+<p>创建 <code class="highlighter-rouge">dev</code> 分支</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git checkout -b dev
+
+</code></pre></div></div>
+
+<p>在 <code class="highlighter-rouge">.travis.yml</code> 文件中 <code class="highlighter-rouge">travis</code> 自动添加的信息（<code class="highlighter-rouge">before_install</code>段）下面添加</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>- chmod 600 ~/.ssh/id_rsa
+- eval "$(ssh-agent -s)"
+- ssh-add ~/.ssh/id_rsa
+- git config --global user.name "Travis Bot"
+- git config --global user.email &lt;your_email&gt;@example.com
+- cd ~
+- git clone --depth=50 --branch=dev git@github.com:&lt;username&gt;/&lt;reponame&gt;.git build_dir
+- cd build_dir
+- git checkout -b master
+
+script:
+- bash -x ./compile.sh
+
+after_success:
+- git add --all
+- git commit -m":black_nib:Updated By Travis"
+- git push -u origin HEAD:master --force
+
+branches:
+  except:
+    - master
+
+branches:
+  only:
+    - dev
+
+</code></pre></div></div>
+
+<p>注意需要替换 <code class="highlighter-rouge">user.email</code>, <code class="highlighter-rouge">&lt;username&gt;</code>, <code class="highlighter-rouge">&lt;reponame&gt;</code> 等配置信息。</p>
+
+<p>注意到 <code class="highlighter-rouge">script</code> 段中调用 <code class="highlighter-rouge">compile.sh</code> 脚本完成构建，因此需要创建一个 <code class="highlighter-rouge">compile.sh</code> 文件，在里面添加项目相关的构建代码。</p>
+
+<p>完成之后初始推送，即可触发 Travis 的第一次构建。</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git add --all
+$ git commit -m"init"
+$ git push origin dev
+
+</code></pre></div></div>
+
+<p>到 Travis 上看看，Travis 构建完成后 <code class="highlighter-rouge">master</code> 分支会在构建成功后由Travis的Push更新。</p>
+
+    </article>
+    <div class="share">
+      <div class="share-component"></div>
+    </div>
+    <div class="comment">
+      
+
+  
+
+  
+
+
+    </div>
+  </div>
+  <div class="column one-fourth">
+    
+<h3>Search</h3>
+<div id="site_search">
+    <input type="text" id="search_box" placeholder="Search">
+</div>
+
+<ul id="search_results"></ul>
+
+<link rel="stylesheet" type="text/css" href="https://rockf91.github.io/assets/css/modules/sidebar-search.css">
+<script src="https://rockf91.github.io/assets/js/simple-jekyll-search.min.js"></script>
+<script src="https://rockf91.github.io/assets/js/search.js"></script>
+
+<script type="text/javascript">
+SimpleJekyllSearch({
+    searchInput: document.getElementById('search_box'),
+    resultsContainer: document.getElementById('search_results'),
+    json: 'https://rockf91.github.io/assets/search_data.json',
+    searchResultTemplate: '<li><a href="{url}" title="{desc}">{title}</a></li>',
+    noResultsText: 'No results found',
+    limit: 10,
+    fuzzy: false,
+    exclude: ['Welcome']
+})
+</script>
+
+    
+
+    
+<h3 class="post-directory-title mobile-hidden">Table of Contents</h3>
+<div id="post-directory-module" class="mobile-hidden">
+  <section class="post-directory">
+  <!-- Links that trigger the jumping -->
+  <!-- Added by javascript below -->
+  <dl></dl>
+  </section>
+</div>
+
+<script src="https://rockf91.github.io/assets/js/jquery.toc.js"></script>
+
+  </div>
+</div>
+</section>
+<!-- /section.content -->
+
+    <footer class="container">
+        <div class="site-footer" role="contentinfo">
+            <div class="copyright left mobile-block">
+                    © 2015
+                    <span title="rockf91">rockf91</span>
+                    <a href="javascript:window.scrollTo(0,0)" class="right mobile-visible">TOP</a>
+            </div>
+
+            <ul class="site-footer-links right mobile-hidden">
+                <li>
+                    <a href="javascript:window.scrollTo(0,0)">TOP</a>
+                </li>
+            </ul>
+            <a href="https://github.com/rockf91/rockf91.github.io" target="_blank" aria-label="view source code">
+                <span class="mega-octicon octicon-mark-github" title="GitHub"></span>
+            </a>
+            <ul class="site-footer-links mobile-hidden">
+                
+                <li>
+                    <a href="https://rockf91.github.io/" title="首页" target="">首页</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/categories/" title="分类" target="">分类</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/wiki/" title="维基" target="">维基</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/links/" title="链接" target="">链接</a>
+                </li>
+                
+                <li>
+                    <a href="https://rockf91.github.io/about/" title="关于" target="">关于</a>
+                </li>
+                
+                <li><a href="https://rockf91.github.io/feed.xml"><span class="octicon octicon-rss" style="color:orange;"></span></a></li>
+            </ul>
+
+        </div>
+    </footer>
+    <div class="tools-wrapper">
+      <a class="gotop" href="#" title="回到顶部"><span class="octicon octicon-arrow-up"></span></a>
+    </div>
+    <!-- / footer -->
+    <script src="https://rockf91.github.io/assets/vendor/share.js/dist/js/share.min.js"></script>
+    <script src="https://rockf91.github.io/assets/js/geopattern.js"></script>
+    <script src="https://rockf91.github.io/assets/js/prism.js"></script>
+    <link rel="stylesheet" href="https://rockf91.github.io/assets/css/globals/prism.css">
+    <script>
+      jQuery(document).ready(function($) {
+        // geopattern
+        $('.geopattern').each(function(){
+          $(this).geopattern($(this).data('pattern-id'));
+        });
+       // hljs.initHighlightingOnLoad();
+      });
+    </script>
+
+    
+
+    
+
+    
+
+    
+
+    
+</body>
+</html>
